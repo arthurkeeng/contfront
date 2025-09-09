@@ -25,7 +25,7 @@ export function ProtectedRoute({
     id: "1",
     email: "admin@propertyflow.com",
     name: "John Admin",
-    role: "admin",
+    role: "manager",
     permissions: ["*"], // Admin has all permissions
     phone: "+234 801 234 5678",
   }

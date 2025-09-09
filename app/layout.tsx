@@ -5,7 +5,9 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { AuthProvider } from "@/lib/auth"
+import { Toaster } from 'sonner'
 import "./globals.css"
+import { AppProvider } from "@/components/data-provider"
 
 export const metadata: Metadata = {
   title: "PropertyFlow ERP - Real Estate & Construction Management",
@@ -42,8 +44,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <AuthProvider>
+
+          {/* <AppProvider> */}
+
           <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
           <Analytics />
+          <Toaster richColors position="top-right" />
+          {/* </AppProvider> */}
         </AuthProvider>
       </body>
     </html>

@@ -17,8 +17,14 @@ export interface User {
   avatar?: string
 }
 
+export interface Company{
+  company_id : string, 
+  
+}
+
 interface AuthContextType {
-  user: User | null
+  user: User | null,
+  setUser : (user : any) => void, 
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
   isLoading: boolean
@@ -59,6 +65,7 @@ const mockUsers: Record<string, User> = {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [company , setCompany] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
@@ -104,6 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return false
   }
 
+ 
   const logout = () => {
     setUser(null)
     localStorage.removeItem("propertyflow_user")
@@ -130,6 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        setUser,
         login,
         logout,
         isLoading,

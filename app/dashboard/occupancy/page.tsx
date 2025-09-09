@@ -34,7 +34,7 @@ const mockOccupancyData = [
     lastTurnover: "2024-01-10",
     prospectiveInquiries: 8,
     scheduledViewings: 3,
-    vacantUnits: [
+    vacantUnitsDetails: [
       { unit: "2B", vacantSince: "2024-01-05", reason: "lease_ended", rent: 28000 },
       { unit: "4A", vacantSince: "2024-01-12", reason: "tenant_moved", rent: 32000 },
     ],
@@ -51,7 +51,7 @@ const mockOccupancyData = [
     lastTurnover: "2023-12-20",
     prospectiveInquiries: 12,
     scheduledViewings: 5,
-    vacantUnits: [
+    vacantUnitsDetails: [
       { unit: "5B", vacantSince: "2023-12-20", reason: "lease_ended", rent: 150000 },
       { unit: "7A", vacantSince: "2024-01-08", reason: "renovation", rent: 180000 },
     ],
@@ -68,7 +68,7 @@ const mockOccupancyData = [
     lastTurnover: "2024-01-01",
     prospectiveInquiries: 6,
     scheduledViewings: 2,
-    vacantUnits: [
+    vacantUnitsDetails: [
       { unit: "House 8", vacantSince: "2023-12-15", reason: "lease_ended", rent: 22000 },
       { unit: "House 12", vacantSince: "2024-01-01", reason: "tenant_moved", rent: 25000 },
       { unit: "House 15", vacantSince: "2024-01-03", reason: "maintenance", rent: 20000 },
@@ -86,7 +86,7 @@ const mockOccupancyData = [
     lastTurnover: "2023-11-15",
     prospectiveInquiries: 15,
     scheduledViewings: 0,
-    vacantUnits: [],
+    vacantUnitsDetails: [],
   },
 ]
 
@@ -339,7 +339,7 @@ export default function OccupancyTracking() {
                       <div className="border-t pt-4">
                         <h4 className="text-sm font-medium text-foreground mb-3">Vacant Units</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {property.vacantUnits.map((unit, index) => (
+                          {property.vacantUnitsDetails.map((unit, index) => (
                             <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                               <div>
                                 <div className="flex items-center space-x-2 mb-1">

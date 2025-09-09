@@ -19,6 +19,7 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react"
+import Link from "next/link"
 
 // Mock data for properties
 const mockProperties = [
@@ -130,10 +131,13 @@ export default function PropertyDashboard() {
             </div>
           </div>
           <div className="flex items-center space-x-3">
+            <Link href ="/dashboard/addproperty">
+
             <Button size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Add Property
             </Button>
+            </Link>
             <Button variant="outline" size="sm">
               <Filter className="h-4 w-4 mr-2" />
               Export

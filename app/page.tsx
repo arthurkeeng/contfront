@@ -7,9 +7,76 @@ import { Badge } from "@/components/ui/badge"
 import { Building2, Hammer, Users, FileText, DollarSign, BarChart3, Shield, CheckCircle } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { subscriptions } from "./data/subscription"
+import { redirect, useRouter } from "next/navigation"
 
 export default function LandingPage() {
+
   const [activeTab, setActiveTab] = useState<"real-estate" | "construction">("real-estate")
+
+  // at this point , we get the subscription plan the user clicked on 
+
+  const router = useRouter()
+  const getSubscriptionPlan = async (name: string, industry: string) => {
+
+    let res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/fetch-subscriptions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name.trim(), industry: industry.trim()
+      })
+    })
+    console.log(res)
+    if (res.ok) {
+      let det = await res.json()
+      console.log('the data is ', det)
+      try {
+        
+        await handlePay(det.price , det.id , det.industry)
+      } catch (error) {
+        
+      }
+    }
+  }
+
+  const handlePay = async (price : string , subscription_id : string , industry : string) => {
+
+    // 2️⃣ Launch Paystack
+    const { default: PaystackPop } = await import("@paystack/inline-js");
+    const paystack = new PaystackPop();
+    paystack.newTransaction({
+      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
+      email: "omnidev.build@gmail.com",
+      amount: Math.ceil(parseInt(price) * 100),
+      onSuccess: (tran) => {
+        // 4️⃣ Verify payment
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-payment`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reference: tran.reference }),
+        })
+          .then((res) => res.json())
+          .then(async ({ data }) => {
+            console.log("the data is ", data)
+            if (data.status === "success") {
+
+              // the follow up will be placed here
+              localStorage.setItem("credentials" , JSON.stringify({
+                subscription_id, industry,
+                paystack_ref : tran.reference, amount : price , currency : "NGN"
+              }))
+              router.push("/auth/signup")
+
+            } else {
+              console.error("Verification failed:", data.error);
+            }
+          })
+          .catch((err) => console.error("Verify error", err));
+      },
+      onCancel: () => {
+      },
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,16 +103,16 @@ export default function LandingPage() {
           </nav>
           <div className="flex items-center space-x-2">
             <Link href={"/auth/signin"}>
-            
-            <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10">
-              Sign In
-            </Button>
+
+              <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10">
+                Sign In
+              </Button>
             </Link>
             <a href="#pricing">
 
-            <Button variant="secondary" size="sm">
-              Get Started
-            </Button>
+              <Button variant="secondary" size="sm">
+                Get Started
+              </Button>
             </a>
           </div>
         </div>
@@ -85,8 +152,8 @@ export default function LandingPage() {
             </div>
             <div className="relative">
               <Image
-              width = {40}
-              height = {40}
+                width={40}
+                height={40}
                 src="/modern-office-building-with-construction-site-in-b.png"
                 alt="PropertyFlow ERP Dashboard"
                 className="rounded-lg shadow-2xl w-full"
@@ -135,8 +202,8 @@ export default function LandingPage() {
             </div>
             <div className="relative">
               <Image
-              width = {40}
-              height = {40}
+                width={40}
+                height={40}
                 src="/property-management-dashboard-showing-building-lis.png"
                 alt="Property Management Dashboard"
                 className="rounded-lg shadow-xl w-full"
@@ -148,8 +215,8 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
             <div className="order-2 lg:order-1 relative">
               <Image
-              width = {40}
-              height = {40}
+                width={40}
+                height={40}
                 src="/construction-project-timeline-dashboard-with-gantt.png"
                 alt="Construction Management Dashboard"
                 className="rounded-lg shadow-xl w-full"
@@ -209,8 +276,8 @@ export default function LandingPage() {
             </div>
             <div className="relative">
               <Image
-              width={40}
-              height={40}
+                width={40}
+                height={40}
                 src="/team-collaboration-interface-showing-user-roles--n.png"
                 alt="Team Collaboration Interface"
                 className="rounded-lg shadow-xl w-full"
@@ -362,22 +429,20 @@ export default function LandingPage() {
             <div className="bg-muted p-1 rounded-lg">
               <button
                 onClick={() => setActiveTab("real-estate")}
-                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === "real-estate"
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "real-estate"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 <Building2 className="w-4 h-4 inline mr-2" />
                 Real Estate
               </button>
               <button
                 onClick={() => setActiveTab("construction")}
-                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === "construction"
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "construction"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 <Hammer className="w-4 h-4 inline mr-2" />
                 Construction
@@ -385,213 +450,61 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {activeTab === "real-estate" && (
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              <Card className="relative">
-                <CardHeader>
-                  <CardTitle className="text-2xl">Starter</CardTitle>
-                  <div className="text-4xl font-bold text-primary">
-                    $49<span className="text-lg font-normal text-muted-foreground">/mo</span>
-                  </div>
-                  <CardDescription>Perfect for small property managers</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Up to 25 properties</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Basic tenant portal</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Document storage</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Basic maintenance tracking</span>
-                    </div>
-                  </div>
-                  <Button className="w-full bg-transparent" variant="outline">
-                    Get Started
-                  </Button>
-                </CardContent>
-              </Card>
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {subscriptions[activeTab].map((plan, idx) => {
 
-              <Card className="relative border-accent border-2 scale-105">
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-accent text-accent-foreground">Most Popular</Badge>
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-2xl">Professional</CardTitle>
-                  <div className="text-4xl font-bold text-primary">
-                    $99<span className="text-lg font-normal text-muted-foreground">/mo</span>
-                  </div>
-                  <CardDescription>Complete real estate management</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Up to 100 properties</span>
+              return (
+                <Card
+                  key={idx}
+                  className={`relative ${plan.popular ? "border-accent border-2 scale-105" : ""}`}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-accent text-accent-foreground">Most Popular</Badge>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Advanced tenant portal</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Automated rent collection</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Lease management & reporting</span>
-                    </div>
-                  </div>
-                  <Button className="w-full">Get Started</Button>
-                </CardContent>
-              </Card>
+                  )}
 
-              <Card className="relative">
-                <CardHeader>
-                  <CardTitle className="text-2xl">Both Industries</CardTitle>
-                  <div className="text-4xl font-bold text-primary">
-                    $149<span className="text-lg font-normal text-muted-foreground">/mo</span>
-                  </div>
-                  <CardDescription>Real estate + construction features</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Everything in Professional</span>
+                  <CardHeader>
+                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                    <div className="text-4xl font-bold text-primary">
+                      ${plan.price}
+                      <span className="text-lg font-normal text-muted-foreground">/mo</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Project management tools</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Contractor management</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Material tracking</span>
-                    </div>
-                  </div>
-                  <Button className="w-full bg-transparent" variant="outline">
-                    Get Started
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                    <CardDescription>{plan.description}</CardDescription>
+                  </CardHeader>
 
-          {activeTab === "construction" && (
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              <Card className="relative">
-                <CardHeader>
-                  <CardTitle className="text-2xl">Starter</CardTitle>
-                  <div className="text-4xl font-bold text-primary">
-                    $49<span className="text-lg font-normal text-muted-foreground">/mo</span>
-                  </div>
-                  <CardDescription>Perfect for small contractors</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Up to 25 projects</span>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      {plan.features.map((feature, fIdx) => (
+                        <div key={fIdx} className="flex items-center space-x-2">
+                          <CheckCircle className="h-4 w-4 text-accent" />
+                          <span className="text-sm">{feature}</span>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Basic project tracking</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Document storage</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Basic team management</span>
-                    </div>
-                  </div>
-                  <Button className="w-full bg-transparent" variant="outline">
-                    Get Started
-                  </Button>
-                </CardContent>
-              </Card>
+                    <Button
+                      onClick={async () => {
+                        try {
+                          const subscription = await getSubscriptionPlan(plan.name, activeTab);
+                          console.log("subscription from button click", subscription);
 
-              <Card className="relative border-accent border-2 scale-105">
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-accent text-accent-foreground">Most Popular</Badge>
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-2xl">Professional</CardTitle>
-                  <div className="text-4xl font-bold text-primary">
-                    $109<span className="text-lg font-normal text-muted-foreground">/mo</span>
-                  </div>
-                  <CardDescription>Complete construction management</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Up to 100 projects</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Advanced project timelines</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Contractor & subcontractor management</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Material inventory & budget tracking</span>
-                    </div>
-                  </div>
-                  <Button className="w-full">Get Started</Button>
-                </CardContent>
-              </Card>
+                          // Example: save to state or redirect
+                          // setSelectedPlan(subscription);
+                          // router.push("/signup?plan=" + subscription.name);
+                        } catch (err) {
+                          console.error("Failed to fetch subscription", err);
+                        }
+                      }}
+                      className={`w-full ${plan.popular ? "" : "bg-transparent"}`} variant={plan.popular ? "default" : "outline"}>
+                      Get Started
+                    </Button>
+                  </CardContent>
+                </Card>
+              )
+            }
 
-              <Card className="relative">
-                <CardHeader>
-                  <CardTitle className="text-2xl">Both Industries</CardTitle>
-                  <div className="text-4xl font-bold text-primary">
-                    $149<span className="text-lg font-normal text-muted-foreground">/mo</span>
-                  </div>
-                  <CardDescription>Construction + real estate features</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Everything in Professional</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Property management tools</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Tenant portal & lease management</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-accent" />
-                      <span className="text-sm">Automated rent collection</span>
-                    </div>
-                  </div>
-                  <Button className="w-full bg-transparent" variant="outline">
-                    Get Started
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="text-center mt-12 p-6 bg-card rounded-lg border">
             <h3 className="text-lg font-semibold mb-2">Need More?</h3>
@@ -614,7 +527,7 @@ export default function LandingPage() {
             <Button size="lg" className="px-8 py-3">
               Schedule a Demo
             </Button>
-            
+
           </div>
           <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
             <div className="text-center">

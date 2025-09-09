@@ -3,8 +3,22 @@
 import type React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Building2, FileText, Users, Wrench, BarChart3, Settings, LogOut, User } from "lucide-react"
+import {
+  Home,
+  Wrench,
+  Users,
+  FileText,
+  BarChart3,
+  Settings,
+  LogOut,
+  User,
+  Building2,
+  LayoutDashboard,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react"
 import { useAuth } from "@/lib/auth"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { cn } from "@/lib/utils"
@@ -16,34 +30,24 @@ export default function DashboardLayout({
 }) {
   const { user, logout } = useAuth()
   const pathname = usePathname()
+  const [isDashboardOpen, setIsDashboardOpen] = useState(true)
 
-  const getNavigationItems = () => {
-    const baseItems = [
-      { href: "/dashboard", icon: Building2, label: "Properties", permission: "properties.view" },
-      { href: "/dashboard/rentals", icon: FileText, label: "Rentals", permission: "rentals.manage" },
-      { href: "/dashboard/occupancy", icon: Users, label: "Occupancy", permission: "properties.view" },
-      { href: "/dashboard/maintenance", icon: Wrench, label: "Maintenance", permission: "maintenance.view" },
-    ]
-
-    // Admin gets all items plus additional ones
-    if (user?.role === "admin") {
-      return [
-        ...baseItems,
-        { href: "/dashboard/reports", icon: BarChart3, label: "Reports", permission: "*" },
-        { href: "/dashboard/settings", icon: Settings, label: "Settings", permission: "*" },
-      ]
-    }
-
-    // Filter items based on user permissions
-    return baseItems.filter((item) => user?.permissions.includes(item.permission) || user?.permissions.includes("*"))
-  }
+  const dashboardItems = [
+    { href: "/dashboard", icon: Home, label: "Properties" },
+    { href: "/dashboard/maintenance", icon: Wrench, label: "Maintenance" },
+    { href: "/dashboard/occupancy", icon: Users, label: "Occupancy" },
+    { href: "/dashboard/rentals", icon: FileText, label: "Rentals" },
+    { href: "/dashboard/reports", icon: BarChart3, label: "Reports" },
+    { href: "/dashboard/settings", icon: Settings, label: "Settings" },
+  ]
 
   return (
     <ProtectedRoute>
       <div className="flex h-screen bg-gray-50">
+        {/* Sidebar */}
         <aside className="w-72 bg-white border-r border-gray-200 shadow-sm">
           <div className="flex flex-col h-full">
-            {/* Header */}
+            {/* Logo / Header */}
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center">
@@ -57,7 +61,7 @@ export default function DashboardLayout({
             </div>
 
             {/* User Profile */}
-            {user && (
+            {/* {user && (
               <div className="p-6 border-b border-gray-100">
                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                   <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
@@ -69,34 +73,61 @@ export default function DashboardLayout({
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Navigation */}
             <nav className="flex-1 p-6 space-y-2">
               <div className="mb-4">
                 <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Main Menu</h3>
               </div>
-              {getNavigationItems().map((item) => {
-                const isActive = pathname === item.href
-                return (
-                  <Link key={item.href} href={item.href}>
-                    <Button
-                      variant="ghost"
-                      className={cn(
-                        "w-full justify-start h-11 px-4 text-left font-medium transition-all duration-200",
-                        isActive
-                          ? "bg-gray-800 text-white hover:bg-gray-700"
-                          : "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
-                      )}
-                    >
-                      <item.icon
-                        className={cn("h-5 w-5 mr-3 transition-colors", isActive ? "text-white" : "text-gray-500")}
-                      />
-                      {item.label}
-                    </Button>
-                  </Link>
-                )
-              })}
+
+              {/* Dashboard Collapsible Menu */}
+              <div>
+                <button
+                  onClick={() => setIsDashboardOpen((prev) => !prev)}
+                  className={cn(
+                    "flex items-center w-full h-11 px-4 text-left font-medium transition-all duration-200 rounded-lg",
+                    "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  )}
+                >
+                  <LayoutDashboard className="h-5 w-5 mr-3 text-gray-500" />
+                  <span className="flex-1">Dashboard</span>
+                  {isDashboardOpen ? (
+                    <ChevronDown className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-gray-500" />
+                  )}
+                </button>
+
+                {isDashboardOpen && (
+                  <div className="ml-8 mt-2 space-y-1">
+                    {dashboardItems.map((item) => {
+                      const isActive = pathname === item.href
+                      return (
+                        <Link key={item.href} href={item.href}>
+                          <Button
+                            variant="ghost"
+                            className={cn(
+                              "w-full justify-start h-10 px-3 text-left text-sm transition-all duration-200",
+                              isActive
+                                ? "bg-gray-800 text-white hover:bg-gray-700"
+                                : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                            )}
+                          >
+                            <item.icon
+                              className={cn(
+                                "h-4 w-4 mr-2 transition-colors",
+                                isActive ? "text-white" : "text-gray-500"
+                              )}
+                            />
+                            {item.label}
+                          </Button>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </nav>
 
             {/* Sign Out */}
