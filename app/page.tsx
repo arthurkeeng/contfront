@@ -9,6 +9,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { subscriptions } from "./data/subscription"
 import { redirect, useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export default function LandingPage() {
 
@@ -65,6 +66,7 @@ export default function LandingPage() {
                 subscription_id, industry,
                 paystack_ref : tran.reference, amount : price , currency : "NGN"
               }))
+              toast.success("Payment Successful. One minute - Redirecting to sign up")
               router.push("/auth/signup")
 
             } else {
