@@ -9,10 +9,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/lib/auth"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import { fi } from "date-fns/locale"
+
+interface UploadFile{
+  file_name: string,
+          file_type: string,
+          file_category: string,
+          s3_key: string,
+          file_size: number,
+}
 
 export default function AddPropertyForm() {
   const [user, setUser] = useState<any>(null)
   const [company, setCompany] = useState<any>(null)
+  const [images, setImages] = useState<FileList | null>(null)
+  const [documents, setDocuments] = useState<FileList | null>(null)
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
   useEffect(() => {
     const storedUser = localStorage.getItem("propertyflow_user")
     if (storedUser) {
@@ -42,10 +57,6 @@ export default function AddPropertyForm() {
     last_inspection: null,
   })
 
-
-  const [images, setImages] = useState<FileList | null>(null)
-  const [documents, setDocuments] = useState<FileList | null>(null)
-const [imageUrl, setImageUrl] = useState<string | null>(null)
   const handleChange = (field: string, value: string) => {
     if (field === "property_type") {
       setFormData({
@@ -71,132 +82,198 @@ const [imageUrl, setImageUrl] = useState<string | null>(null)
   }
 
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault()
+
+  //   // handle the image uploads
+  //   let uploadedImages: string[] = []
+  //   let uploadedDocuments: string[] = []
+
+
+  //   try {
+  //     setIsLoading(true)
+
+
+      // if (images) {
+      //   for (const file of Array.from(images)) {
+  //         console.log(file)
+          // const presigned_url = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/s3/presign`, {
+          //   method: "POST",
+          //   headers: { "Content-Type": "application/json" },
+          //   body: JSON.stringify({
+          //     filename: file.name,
+          //     filetype: file.type
+          //   })
+          // })
+
+  //         const { url, key } = await presigned_url.json()
+  //         console.log("Uploading to:", url);
+          // const uploadRes = await fetch(url, {
+          //   method: "PUT",
+          //   headers: { "Content-Type": file.type },
+          //   body: file
+          // })
+  //         console.log("Upload response:", uploadRes.status, uploadRes.statusText);
+  //         if (uploadRes.ok) {
+  //           uploadedImages.push(key)
+  //         }
+  //         else {
+  //           toast.error("Failed to upload image")
+  //         }
+  //       }
+  //     }
+
+
+  //     if (documents) {
+  //       for (const file of Array.from(documents)) {
+  //         const presigned_url = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/s3/presign`, {
+  //           method: "POST",
+  //           headers: { "Content-Type": "application/json" },
+  //           body: JSON.stringify({
+  //             filename: file.name,
+  //             filetype: file.type
+  //           })
+  //         })
+
+  //         const { url, key } = await presigned_url.json()
+
+  //         const uploadRes = await fetch(url, {
+  //           method: "PUT",
+  //           headers: { "Content-Type": file.type },
+  //           body: file
+  //         })
+
+  //         if (uploadRes.ok) {
+
+  //           uploadedDocuments.push(key)
+
+  //         }
+  //         else {
+  //           toast.error("Failed to add document")
+  //         }
+  //       }
+
+  //     }
+
+      
+      // const payload = {
+      //   ...formData,
+      //   company_id: company?.company_id,
+      //   user_id: user?.user_id,
+      // }
+
+      // const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/add_property`, {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify(payload),
+      // })
+
+      // if (res.ok) {
+      //   toast.success("Property Created Successfully");
+      //   router.push("/dashboard")
+      // } else {
+      //   toast.error("Failed to Create Property");
+      // }
+      // }
+    // } catch (error) {
+    //   toast.error("An Error Occured. Please Try Again")
+    // }
+
+    // finally {
+    //   setIsLoading(false)
+    // }
+  // }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    console.log("Add documents")
-    // handle the image uploads
-    let uploadedDocuments: string[] = []
+    const uploadedFiles : UploadFile[]= []
+    try {
+      setIsLoading(true)
 
+      const uploadFiles = async (file : File , category : "image" | "document") =>{
+        const presigned_url = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/s3/presign`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              filename: file.name,
+              filetype: file.type
+            })
+          })
 
-    // if (images) {
-    //   for (const file of Array.from(images)) {
-    //     console.log(file)
-    //     const presigned_url = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/s3/presign`, {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" },
-    //       body: JSON.stringify({
-    //         filename: file.name,
-    //         filetype: file.type
-    //       })
-    //     })
+           const { url, key } = await presigned_url.json()
 
-    //     const { url, key } = await presigned_url.json()
-    //     console.log("Uploading to:", url);
-    //     const uploadRes = await fetch(url, {
-    //       method: "PUT",
-    //       // headers : {"Content-Type" : file.type}, 
-    //       body: file
-    //     })
-    //     console.log("Upload response:", uploadRes.status, uploadRes.statusText);
-    //     if (uploadRes.ok) {
-    //       uploadedImages.push(key)
-    //     }
-    //     else {
-    //       toast.error("Failed to upload image")
-    //     }
-    //   }
-    // }
+            const uploadRes = await fetch(url, {
+            method: "PUT",
+            headers: { "Content-Type": file.type },
+            body: file
+          })
 
-
-    // if (documents) {
-    //   for (const file of Array.from(documents)) {
-    //     const presigned_url = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/s3/presign`, {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" },
-    //       body: JSON.stringify({
-    //         filename: file.name,
-    //         filetype: file.type
-    //       })
-    //     })
-
-    //     const { url, key } = await presigned_url.json()
-
-    //     const uploadRes = await fetch(url, {
-    //       method: "PUT",
-    //       // headers : {"Content-Type" : file.type},
-    //       body: file
-    //     })
-
-    //     if (uploadRes.ok) {
-    //       uploadedDocuments.push(key)
-
-    //     }
-    //     else {
-    //       toast.error("Failed to add document")
-    //     }
-    //   }
-
-    // }
-
-    let uploadedImages: string[] = []
-
-  // 🚀 Upload images to Cloudinary
-  if (images) {
-    for (const file of Array.from(images)) {
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!) 
-      // create this unsigned preset in Cloudinary dashboard
-
-      const uploadRes = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      )
-
-      const data = await uploadRes.json()
-      if (uploadRes.ok) {
-        uploadedImages.push(data.secure_url) // store image URL
-      } else {
-        console.error("Cloudinary error:", data)
-        toast.error("Failed to upload image")
+          if (uploadRes.ok){
+             uploadedFiles.push({
+          file_name: file.name,
+          file_type: file.type,
+          file_category: category,
+          s3_key: key,
+          file_size: file.size,
+        })
+          }
+          else{
+            toast.error(`Failed to upload ${file.name}`)
+          }
       }
+
+        if (images) {
+        for (const file of Array.from(images)) {
+            await uploadFiles(file, "image")
+        }
+      
+      }
+        if (documents) {
+        for (const file of Array.from(documents)) {
+            await uploadFiles(file, "document")
+        }
+      
+      }
+        const payload = {
+        ...formData,
+        company_id: company?.company_id,
+        user_id: user?.user_id,
+        files : uploadedFiles
+      }
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/add_property`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (res.ok) {
+        toast.success("Property Created Successfully");
+        router.push("/dashboard")
+      } else {
+        toast.error("Failed to Create Property");
+      }
+
+    } catch (error) {
+      
     }
-  
-    const payload = {
-      ...formData,
-      company_id: company?.company_id,
-      user_id: user?.user_id,
-    }
-
-
-    console.log("The payload is ", payload)
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/add_property`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    })
-
-    if (res.ok) {
-      toast.success("Property Created Successfully");
-    } else {
-      toast.error("Failed to Create Property");
+    finally{
+      setIsLoading(false)
     }
   }
-  }
- return (
+  return (
     <Card className="max-w-4xl mx-auto mt-8 shadow-lg rounded-2xl border border-gray-200">
       <CardHeader className="pb-2">
         <CardTitle className="text-2xl font-bold text-gray-800">🏡 Add New Property</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-8">
-          
+
           {/* Section: Property Details */}
           <div>
             <h3 className="text-lg font-semibold mb-4 text-gray-700">Property Details</h3>
@@ -290,40 +367,40 @@ const [imageUrl, setImageUrl] = useState<string | null>(null)
           </div>
 
           {/* Section: Units */}
-          {formData.property_type !== "land" && (
-            <div>
-              <h3 className="text-lg font-semibold mb-4 text-gray-700">Units</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <Label>Total Units</Label>
-                  <Input
-                    type="number"
-                    placeholder="e.g. 12"
-                    value={formData.units!}
-                    onChange={(e) => handleChange("units", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label>Occupied</Label>
-                  <Input
-                    type="number"
-                    placeholder="e.g. 8"
-                    value={formData.occupied!}
-                    onChange={(e) => handleChange("occupied", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label>Vacant</Label>
-                  <Input
-                    type="number"
-                    placeholder="e.g. 4"
-                    value={formData.vacant!}
-                    onChange={(e) => handleChange("vacant", e.target.value)}
-                  />
-                </div>
+          {/* {formData.property_type !== "land" && ( */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4 text-gray-700">Units</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <Label>Total Units</Label>
+                <Input
+                  type="number"
+                  placeholder="e.g. 12"
+                  value={formData.units!}
+                  onChange={(e) => handleChange("units", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Occupied</Label>
+                <Input
+                  type="number"
+                  placeholder="e.g. 8"
+                  value={formData.occupied!}
+                  onChange={(e) => handleChange("occupied", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Vacant</Label>
+                <Input
+                  type="number"
+                  placeholder="e.g. 4"
+                  value={formData.vacant!}
+                  onChange={(e) => handleChange("vacant", e.target.value)}
+                />
               </div>
             </div>
-          )}
+          </div>
+          {/* )} */}
 
           {/* Section: Uploads */}
           <div>
@@ -346,10 +423,58 @@ const [imageUrl, setImageUrl] = useState<string | null>(null)
                   </div>
                 )}
               </div>
+              <div>
+                <Label>Property Documents</Label>
+                <Input
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,image/*"
+                  onChange={(e) => setDocuments(e.target.files)}
+                />
+                {documents && (
+                  <div className="flex flex-col gap-2 mt-2">
+                    {Array.from(documents).map((file, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-3 p-2 border rounded-lg bg-gray-50"
+                      >
+                        {/* Icon preview */}
+                        <div className="w-10 h-10 flex items-center justify-center bg-gray-200 rounded">
+                          {file.type.includes("pdf") ? (
+                            <span className="text-red-500 font-bold">PDF</span>
+                          ) : file.type.includes("word") ||
+                            file.name.endsWith(".docx") ||
+                            file.name.endsWith(".doc") ? (
+                            <span className="text-blue-500 font-bold">DOC</span>
+                          ) : file.type.includes("sheet") ||
+                            file.name.endsWith(".xls") ||
+                            file.name.endsWith(".xlsx") ? (
+                            <span className="text-green-500 font-bold">XLS</span>
+                          ) : (
+                            <span className="text-gray-600">📄</span>
+                          )}
+                        </div>
+
+                        {/* File details */}
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{file.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {(file.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
 
-          <Button type="submit" className="w-full text-lg py-6">
+          <Button type="submit" className="w-full text-lg py-6" disabled={isLoading}>
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+            ) : null}
             Save Property
           </Button>
         </form>

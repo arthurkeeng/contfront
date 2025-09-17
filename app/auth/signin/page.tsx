@@ -28,7 +28,7 @@ const formSchema = z.object({
 export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false)
 
-  const { setUser } = useAuth()
+  const { setUser , setCompany} = useAuth()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -70,6 +70,8 @@ export default function SignInPage() {
           email: values.email,
         })
       )
+      setUser(user)
+      setCompany({...company})
       localStorage.setItem(
         "propertyflow_company",
         JSON.stringify({

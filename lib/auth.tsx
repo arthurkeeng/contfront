@@ -25,7 +25,8 @@ export interface Company{
 interface AuthContextType {
   user: User | null,
   setUser : (user : any) => void, 
-  login: (email: string, password: string) => Promise<boolean>
+  company  : any , 
+  setCompany : (company : any) => void,
   logout: () => void
   isLoading: boolean
   hasPermission: (permission: string) => boolean
@@ -78,40 +79,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false)
   }, [])
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    setIsLoading(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Mock authentication - in real app, this would be an API call
-    const user = mockUsers[email.toLowerCase()]
-    if (user && password === "password123") {
-      setUser(user)
-      localStorage.setItem("propertyflow_user", JSON.stringify(user))
-      setIsLoading(false)
-
-      // Redirect based on role
-      switch (user.role) {
-        case "admin":
-        case "manager":
-          router.push("/dashboard")
-          break
-        case "maintenance":
-          router.push("/dashboard/maintenance")
-          break
-        default:
-          router.push("/dashboard")
-      }
-
-      return true
-    }
-
-    setIsLoading(false)
-    return false
-  }
-
- 
   const logout = () => {
     setUser(null)
     localStorage.removeItem("propertyflow_user")
@@ -139,7 +106,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         setUser,
-        login,
+        company ,
+         setCompany,
         logout,
         isLoading,
         hasPermission,
