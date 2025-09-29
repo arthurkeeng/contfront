@@ -8,47 +8,42 @@ import { Building2, Hammer, Users, FileText, DollarSign, BarChart3, Shield, Chec
 import Image from "next/image"
 import Link from "next/link"
 import { subscriptions } from "./data/subscription"
-import { redirect, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 export default function LandingPage() {
-
   const [activeTab, setActiveTab] = useState<"real-estate" | "construction">("real-estate")
 
-  // at this point , we get the subscription plan the user clicked on 
+  // at this point , we get the subscription plan the user clicked on
 
   const router = useRouter()
   const getSubscriptionPlan = async (name: string, industry: string) => {
-
-    let res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/fetch-subscriptions`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/fetch-subscriptions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: name.trim(), industry: industry.trim()
-      })
+        name: name.trim(),
+        industry: industry.trim(),
+      }),
     })
     console.log(res)
     if (res.ok) {
-      let det = await res.json()
-      console.log('the data is ', det)
+      const det = await res.json()
+      console.log("the data is ", det)
       try {
-        
-        await handlePay(det.price , det.id , det.industry)
-      } catch (error) {
-        
-      }
+        await handlePay(det.price, det.id, det.industry)
+      } catch (error) {}
     }
   }
 
-  const handlePay = async (price : string , subscription_id : string , industry : string) => {
-
+  const handlePay = async (price: string, subscription_id: string, industry: string) => {
     // 2️⃣ Launch Paystack
-    const { default: PaystackPop } = await import("@paystack/inline-js");
-    const paystack = new PaystackPop();
+    const { default: PaystackPop } = await import("@paystack/inline-js")
+    const paystack = new PaystackPop()
     paystack.newTransaction({
       key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
       email: "omnidev.build@gmail.com",
-      amount: Math.ceil(parseInt(price) * 100),
+      amount: Math.ceil(Number.parseInt(price) * 100),
       onSuccess: (tran) => {
         // 4️⃣ Verify payment
         fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-payment`, {
@@ -60,25 +55,28 @@ export default function LandingPage() {
           .then(async ({ data }) => {
             console.log("the data is ", data)
             if (data.status === "success") {
-
               // the follow up will be placed here
-              localStorage.setItem("credentials" , JSON.stringify({
-                subscription_id, industry,
-                paystack_ref : tran.reference, amount : price , currency : "NGN"
-              }))
+              localStorage.setItem(
+                "credentials",
+                JSON.stringify({
+                  subscription_id,
+                  industry,
+                  paystack_ref: tran.reference,
+                  amount: price,
+                  currency: "NGN",
+                }),
+              )
               toast.success("Payment Successful. One minute - Redirecting to sign up")
               router.push("/auth/signup")
-
             } else {
-              console.error("Verification failed:", data.error);
+              console.error("Verification failed:", data.error)
             }
           })
-          .catch((err) => console.error("Verify error", err));
+          .catch((err) => console.error("Verify error", err))
       },
-      onCancel: () => {
-      },
-    });
-  };
+      onCancel: () => {},
+    })
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -105,13 +103,16 @@ export default function LandingPage() {
           </nav>
           <div className="flex items-center space-x-2">
             <Link href={"/auth/signin"}>
-
               <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10">
                 Sign In
               </Button>
             </Link>
+            <Link href="/properties">
+              <Button variant="secondary" size="sm" className="mr-2">
+                View Properties
+              </Button>
+            </Link>
             <a href="#pricing">
-
               <Button variant="secondary" size="sm">
                 Get Started
               </Button>
@@ -143,14 +144,15 @@ export default function LandingPage() {
                 all in one powerful platform.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                {/* <Button size="lg" className="px-8 py-3">
-                  Start Free Trial
-                </Button> */}
+                <Link href="/properties">
+                  <Button size="lg" className="px-8 py-3">
+                    View Properties
+                  </Button>
+                </Link>
                 <Button variant="outline" size="lg" className="px-8 py-3 bg-transparent">
                   Watch Demo
                 </Button>
               </div>
-              {/* <p className="text-sm text-muted-foreground mt-4">No credit card required • 14-day free trial</p> */}
             </div>
             <div className="relative">
               <Image
@@ -431,20 +433,22 @@ export default function LandingPage() {
             <div className="bg-muted p-1 rounded-lg">
               <button
                 onClick={() => setActiveTab("real-estate")}
-                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "real-estate"
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === "real-estate"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
-                  }`}
+                }`}
               >
                 <Building2 className="w-4 h-4 inline mr-2" />
                 Real Estate
               </button>
               <button
                 onClick={() => setActiveTab("construction")}
-                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "construction"
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === "construction"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
-                  }`}
+                }`}
               >
                 <Hammer className="w-4 h-4 inline mr-2" />
                 Construction
@@ -454,12 +458,8 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {subscriptions[activeTab].map((plan, idx) => {
-
               return (
-                <Card
-                  key={idx}
-                  className={`relative ${plan.popular ? "border-accent border-2 scale-105" : ""}`}
-                >
+                <Card key={idx} className={`relative ${plan.popular ? "border-accent border-2 scale-105" : ""}`}>
                   {plan.popular && (
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                       <Badge className="bg-accent text-accent-foreground">Most Popular</Badge>
@@ -487,25 +487,25 @@ export default function LandingPage() {
                     <Button
                       onClick={async () => {
                         try {
-                          const subscription = await getSubscriptionPlan(plan.name, activeTab);
-                          console.log("subscription from button click", subscription);
+                          const subscription = await getSubscriptionPlan(plan.name, activeTab)
+                          console.log("subscription from button click", subscription)
 
                           // Example: save to state or redirect
                           // setSelectedPlan(subscription);
                           // router.push("/signup?plan=" + subscription.name);
                         } catch (err) {
-                          console.error("Failed to fetch subscription", err);
+                          console.error("Failed to fetch subscription", err)
                         }
                       }}
-                      className={`w-full ${plan.popular ? "" : "bg-transparent"}`} variant={plan.popular ? "default" : "outline"}>
+                      className={`w-full ${plan.popular ? "" : "bg-transparent"}`}
+                      variant={plan.popular ? "default" : "outline"}
+                    >
                       Get Started
                     </Button>
                   </CardContent>
                 </Card>
               )
-            }
-
-            )}
+            })}
           </div>
 
           <div className="text-center mt-12 p-6 bg-card rounded-lg border">
@@ -529,7 +529,6 @@ export default function LandingPage() {
             <Button size="lg" className="px-8 py-3">
               Schedule a Demo
             </Button>
-
           </div>
           <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
             <div className="text-center">

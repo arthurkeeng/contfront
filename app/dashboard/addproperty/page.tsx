@@ -25,7 +25,6 @@ export default function AddPropertyForm() {
   const [company, setCompany] = useState<any>(null)
   const [images, setImages] = useState<FileList | null>(null)
   const [documents, setDocuments] = useState<FileList | null>(null)
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   useEffect(() => {
@@ -81,110 +80,6 @@ export default function AddPropertyForm() {
     setFormData({ ...formData, [field]: value })
   }
 
-
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault()
-
-  //   // handle the image uploads
-  //   let uploadedImages: string[] = []
-  //   let uploadedDocuments: string[] = []
-
-
-  //   try {
-  //     setIsLoading(true)
-
-
-      // if (images) {
-      //   for (const file of Array.from(images)) {
-  //         console.log(file)
-          // const presigned_url = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/s3/presign`, {
-          //   method: "POST",
-          //   headers: { "Content-Type": "application/json" },
-          //   body: JSON.stringify({
-          //     filename: file.name,
-          //     filetype: file.type
-          //   })
-          // })
-
-  //         const { url, key } = await presigned_url.json()
-  //         console.log("Uploading to:", url);
-          // const uploadRes = await fetch(url, {
-          //   method: "PUT",
-          //   headers: { "Content-Type": file.type },
-          //   body: file
-          // })
-  //         console.log("Upload response:", uploadRes.status, uploadRes.statusText);
-  //         if (uploadRes.ok) {
-  //           uploadedImages.push(key)
-  //         }
-  //         else {
-  //           toast.error("Failed to upload image")
-  //         }
-  //       }
-  //     }
-
-
-  //     if (documents) {
-  //       for (const file of Array.from(documents)) {
-  //         const presigned_url = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/s3/presign`, {
-  //           method: "POST",
-  //           headers: { "Content-Type": "application/json" },
-  //           body: JSON.stringify({
-  //             filename: file.name,
-  //             filetype: file.type
-  //           })
-  //         })
-
-  //         const { url, key } = await presigned_url.json()
-
-  //         const uploadRes = await fetch(url, {
-  //           method: "PUT",
-  //           headers: { "Content-Type": file.type },
-  //           body: file
-  //         })
-
-  //         if (uploadRes.ok) {
-
-  //           uploadedDocuments.push(key)
-
-  //         }
-  //         else {
-  //           toast.error("Failed to add document")
-  //         }
-  //       }
-
-  //     }
-
-      
-      // const payload = {
-      //   ...formData,
-      //   company_id: company?.company_id,
-      //   user_id: user?.user_id,
-      // }
-
-      // const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/add_property`, {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(payload),
-      // })
-
-      // if (res.ok) {
-      //   toast.success("Property Created Successfully");
-      //   router.push("/dashboard")
-      // } else {
-      //   toast.error("Failed to Create Property");
-      // }
-      // }
-    // } catch (error) {
-    //   toast.error("An Error Occured. Please Try Again")
-    // }
-
-    // finally {
-    //   setIsLoading(false)
-    // }
-  // }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

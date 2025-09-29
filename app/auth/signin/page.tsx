@@ -71,7 +71,9 @@ export default function SignInPage() {
         })
       )
       setUser(user)
-      setCompany({...company})
+      console.log(company)
+      console.log(user)
+      setCompany(company)
       localStorage.setItem(
         "propertyflow_company",
         JSON.stringify({

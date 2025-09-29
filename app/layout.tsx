@@ -7,7 +7,7 @@ import { Suspense } from "react"
 import { AuthProvider } from "@/lib/auth"
 import { Toaster } from 'sonner'
 import "./globals.css"
-import { AppProvider } from "@/components/data-provider"
+import Loading from "@/components/loading"
 
 export const metadata: Metadata = {
   title: "PropertyFlow ERP - Real Estate & Construction Management",
@@ -47,7 +47,7 @@ export default function RootLayout({
 
           {/* <AppProvider> */}
 
-          <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+          <Suspense fallback={<div><Loading/></div>}>{children}</Suspense>
           <Analytics />
           <Toaster richColors position="top-right" />
           {/* </AppProvider> */}

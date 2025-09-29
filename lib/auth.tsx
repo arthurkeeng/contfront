@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 export type UserRole = "admin" | "manager" | "maintenance"
 
 export interface User {
-  id: string
+  user_id: string
   email: string
   name: string
   role: UserRole
@@ -36,33 +36,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // Mock user data for demonstration
-const mockUsers: Record<string, User> = {
-  "admin@propertyflow.com": {
-    id: "1",
-    email: "admin@propertyflow.com",
-    name: "John Admin",
-    role: "admin",
-    permissions: ["*"], // Admin has all permissions
-    phone: "+234 801 234 5678",
-  },
-  "manager@propertyflow.com": {
-    id: "2",
-    email: "manager@propertyflow.com",
-    name: "Sarah Manager",
-    role: "manager",
-    permissions: ["properties.view", "properties.manage", "rentals.manage", "maintenance.approve"],
-    assignedProperties: ["1", "2", "3"], // Assigned to specific properties
-    phone: "+234 802 345 6789",
-  },
-  "maintenance@propertyflow.com": {
-    id: "3",
-    email: "maintenance@propertyflow.com",
-    name: "Mike Maintenance",
-    role: "maintenance",
-    permissions: ["maintenance.view", "maintenance.update"],
-    phone: "+234 803 456 7890",
-  },
-}
+
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -78,10 +52,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setIsLoading(false)
   }, [])
+  useEffect(() => {
+    const storedCompany = localStorage.getItem("propertyflow_company")
+    if (storedCompany) {
+      setCompany(JSON.parse(storedCompany))
+    }
+    setIsLoading(false)
+  }, [])
 
   const logout = () => {
     setUser(null)
+    setCompany(null)
     localStorage.removeItem("propertyflow_user")
+    localStorage.removeItem("propertyflow_company")
     router.push("/auth/signin")
   }
 
