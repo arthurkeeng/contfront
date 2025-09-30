@@ -131,8 +131,10 @@ const mockUnits = [
 
 export default function PropertyPage({ propertyId }: { propertyId: string }) {
   const { property_id } = useParams()
-    const [units, setUnits] = useState(mockUnits)
-
+    const [units, setUnits] = useState()
+    // this dialog box is for the adding units
+    const [showAddDialog,
+   setShowAddDialog ] = useState(false)
 
   const [property, setProperty] = useState<Property | null>(null)
   // const [files, setFiles] = useState<any>(null)
@@ -153,6 +155,7 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
         if (res.ok) {
           const data = await res.json()
           setProperty({...data.property , files : data.files})
+          setUnits(data.units)
           // setFiles(data.files)
         } else {
           toast.error("Failed to fetch property")
@@ -244,30 +247,65 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
   }
 
   
-  const handleAddUnit = (newUnit: Omit<(typeof mockUnits)[0], "id" | "created_at" | "updated_at">) => {
-    const unit = {
-      ...newUnit,
-      id: Math.random().toString(36).substr(2, 9),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-    // TODO: Make API call to create unit
-    console.log("[v0] Adding unit:", unit)
-  }
-
-  const handleUpdateUnit = (id: string, updatedUnit: Partial<(typeof mockUnits)[0]>) => {
+  const handleAddUnit = async(newUnit: Omit<(typeof mockUnits)[0], "id" | "created_at" | "updated_at">) => {
+   
+      let req = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${property_id}/units`, {
+        method : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...newUnit, 
+        })
+      })
+      if (req.ok){
+        let response = await req.json()
+        setShowAddDialog(false)
+        toast.success(response.message)
+      }
+      else{
+        toast.error("Failed to add unit")
+      }
     
-    // TODO: Make API call to update unit
-    console.log("[v0] Updating unit:", id, updatedUnit)
   }
 
-  const handleDeleteUnit = (id: string) => {
-    setUnits((prev) => prev.filter((unit) => unit.id !== id))
-    // TODO: Make API call to delete unit
-    console.log("[v0] Deleting unit:", id)
+  const handleUpdateUnit = async (id: string, updatedUnit: Partial<(typeof mockUnits)[0]>) => {
+
+    console.log("the id is " , updatedUnit)
+    const req = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/property/${property_id}/unit/${id}`,{
+      method : "PATCH",
+       headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...updatedUnit
+        })
+
+    })
+  
+    if(req.ok){
+      let response =await  req.json()
+      router.push('/dashboard')
+      
+      toast.success(response.message)
+    }
+    else{
+      toast.error("Failed to Update Unit")
+    }
   }
 
-  console.log("the property is " , property?.files)
+  const handleDeleteUnit = async (id: string) => {
+    const req = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/property/${property_id}/unit/${id}`,{
+      method : "DELETE"
+    })
+
+    if(req.ok){
+      console.log("deleted")
+      router.push('/dashboard')
+      
+      toast.success("deleted")
+    }
+    else{
+      toast.error("Failed to Delete Unit")
+    }
+  }
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto p-6">
@@ -296,509 +334,7 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
       </div>
     )
 
-  // return (
-  //   <div className="max-w-7xl mx-auto p-6 space-y-6">
-  //     <div className="flex items-center justify-between">
-  //       <div className="space-y-1">
-  //         <h1 className="text-3xl font-bold tracking-tight">{property.property_name}</h1>
-  //         <div className="flex items-center gap-2 text-muted-foreground">
-  //           <MapPin className="h-4 w-4" />
-  //           <span>{property.property_address}</span>
-  //         </div>
-  //       </div>
-  //       <div className="flex items-center gap-3">
-  //         <Badge variant={property.property_status === "active" ? "default" : "secondary"}>
-  //           {property.property_status}
-  //         </Badge>
-  //         <Button onClick={handleSave} disabled={saving} className="min-w-[120px]">
-  //           {saving ? "Saving..." : "Save Changes"}
-  //         </Button>
-  //       </div>
-  //     </div>
-
-  //     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-  //       <div className="lg:col-span-2 space-y-6">
-  //         {/* Basic Information */}
-  //         <Card>
-  //           <CardHeader>
-  //             <CardTitle className="flex items-center gap-2">
-  //               <Home className="h-5 w-5" />
-  //               Basic Information
-  //             </CardTitle>
-  //             <CardDescription>Core property details and identification</CardDescription>
-  //           </CardHeader>
-  //           <CardContent className="space-y-4">
-  //             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="property_name">Property Name</Label>
-  //                 <Input
-  //                   id="property_name"
-  //                   value={property.property_name}
-  //                   onChange={(e) => handleChange("property_name", e.target.value)}
-  //                 />
-  //               </div>
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="property_type">Property Type</Label>
-  //                 <Select
-  //                   value={property.property_type}
-  //                   onValueChange={(value) => handleChange("property_type", value)}
-  //                 >
-  //                   <SelectTrigger>
-  //                     <SelectValue placeholder="Select type" />
-  //                   </SelectTrigger>
-  //                   <SelectContent>
-  //                     <SelectItem value="residential">Residential</SelectItem>
-  //                     <SelectItem value="commercial">Commercial</SelectItem>
-  //                     <SelectItem value="industrial">Industrial</SelectItem>
-  //                     <SelectItem value="mixed-use">Mixed Use</SelectItem>
-  //                   </SelectContent>
-  //                 </Select>
-  //               </div>
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="category">Category</Label>
-  //                 <Select value={property.category} onValueChange={(value) => handleChange("category", value)}>
-  //                   <SelectTrigger>
-  //                     <SelectValue placeholder="Select category" />
-  //                   </SelectTrigger>
-  //                   <SelectContent>
-  //                     <SelectItem value="apartment">Apartment</SelectItem>
-  //                     <SelectItem value="house">House</SelectItem>
-  //                     <SelectItem value="condo">Condo</SelectItem>
-  //                     <SelectItem value="office">Office</SelectItem>
-  //                     <SelectItem value="retail">Retail</SelectItem>
-  //                     <SelectItem value="warehouse">Warehouse</SelectItem>
-  //                   </SelectContent>
-  //                 </Select>
-  //               </div>
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="transaction_type">Transaction Type</Label>
-  //                 <Select
-  //                   value={property.transaction_type}
-  //                   onValueChange={(value) => handleChange("transaction_type", value)}
-  //                 >
-  //                   <SelectTrigger>
-  //                     <SelectValue placeholder="Select type" />
-  //                   </SelectTrigger>
-  //                   <SelectContent>
-  //                     <SelectItem value="rent">Rent</SelectItem>
-  //                     <SelectItem value="sale">Sale</SelectItem>
-  //                     <SelectItem value="lease">Lease</SelectItem>
-  //                   </SelectContent>
-  //                 </Select>
-  //               </div>
-  //             </div>
-  //             <div className="space-y-2">
-  //               <Label htmlFor="property_description">Description</Label>
-  //               <Textarea
-  //                 id="property_description"
-  //                 value={property.property_description || ""}
-  //                 onChange={(e) => handleChange("property_description", e.target.value)}
-  //                 placeholder="Describe the property features, location benefits, and unique selling points..."
-  //                 rows={4}
-  //               />
-  //             </div>
-  //           </CardContent>
-  //         </Card>
-
-  //         {/* Location Details */}
-  //         <Card>
-  //           <CardHeader>
-  //             <CardTitle className="flex items-center gap-2">
-  //               <MapPin className="h-5 w-5" />
-  //               Location Details
-  //             </CardTitle>
-  //           </CardHeader>
-  //           <CardContent className="space-y-4">
-  //             <div className="space-y-2">
-  //               <Label htmlFor="property_address">Full Address</Label>
-  //               <Textarea
-  //                 id="property_address"
-  //                 value={property.property_address}
-  //                 onChange={(e) => handleChange("property_address", e.target.value)}
-  //                 rows={2}
-  //               />
-  //             </div>
-  //             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="city">City</Label>
-  //                 <Input id="city" value={property.city || ""} onChange={(e) => handleChange("city", e.target.value)} />
-  //               </div>
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="state">State</Label>
-  //                 <Input
-  //                   id="state"
-  //                   value={property.state || ""}
-  //                   onChange={(e) => handleChange("state", e.target.value)}
-  //                 />
-  //               </div>
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="zip_code">ZIP Code</Label>
-  //                 <Input
-  //                   id="zip_code"
-  //                   value={property.zip_code || ""}
-  //                   onChange={(e) => handleChange("zip_code", e.target.value)}
-  //                 />
-  //               </div>
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="neighborhood">Neighborhood</Label>
-  //                 <Input
-  //                   id="neighborhood"
-  //                   value={property.neighborhood || ""}
-  //                   onChange={(e) => handleChange("neighborhood", e.target.value)}
-  //                 />
-  //               </div>
-  //             </div>
-  //           </CardContent>
-  //         </Card>
-
-  //         {/* Property Specifications */}
-  //         <Card>
-  //           <CardHeader>
-  //             <CardTitle className="flex items-center gap-2">
-  //               <Settings className="h-5 w-5" />
-  //               Property Specifications
-  //             </CardTitle>
-  //           </CardHeader>
-  //           <CardContent className="space-y-4">
-  //             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="square_footage">Square Footage</Label>
-  //                 <Input
-  //                   id="square_footage"
-  //                   type="number"
-  //                   value={property.square_footage || ""}
-  //                   onChange={(e) => handleChange("square_footage", Number.parseInt(e.target.value) || 0)}
-  //                 />
-  //               </div>
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="lot_size">Lot Size (sq ft)</Label>
-  //                 <Input
-  //                   id="lot_size"
-  //                   type="number"
-  //                   value={property.lot_size || ""}
-  //                   onChange={(e) => handleChange("lot_size", Number.parseInt(e.target.value) || 0)}
-  //                 />
-  //               </div>
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="bedrooms">Bedrooms</Label>
-  //                 <Input
-  //                   id="bedrooms"
-  //                   type="number"
-  //                   value={property.bedrooms || ""}
-  //                   onChange={(e) => handleChange("bedrooms", Number.parseInt(e.target.value) || 0)}
-  //                 />
-  //               </div>
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="bathrooms">Bathrooms</Label>
-  //                 <Input
-  //                   id="bathrooms"
-  //                   type="number"
-  //                   step="0.5"
-  //                   value={property.bathrooms || ""}
-  //                   onChange={(e) => handleChange("bathrooms", Number.parseFloat(e.target.value) || 0)}
-  //                 />
-  //               </div>
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="year_built">Year Built</Label>
-  //                 <Input
-  //                   id="year_built"
-  //                   type="number"
-  //                   value={property.year_built || ""}
-  //                   onChange={(e) => handleChange("year_built", Number.parseInt(e.target.value) || 0)}
-  //                 />
-  //               </div>
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="parking_spaces">Parking Spaces</Label>
-  //                 <Input
-  //                   id="parking_spaces"
-  //                   type="number"
-  //                   value={property.parking_spaces || ""}
-  //                   onChange={(e) => handleChange("parking_spaces", Number.parseInt(e.target.value) || 0)}
-  //                 />
-  //               </div>
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="units">Total Units</Label>
-  //                 <Input
-  //                   id="units"
-  //                   type="number"
-  //                   value={property.units || ""}
-  //                   onChange={(e) => handleChange("units", Number.parseInt(e.target.value) || 0)}
-  //                 />
-  //               </div>
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="occupied">Occupied Units</Label>
-  //                 <Input
-  //                   id="occupied"
-  //                   type="number"
-  //                   value={property.occupied || ""}
-  //                   onChange={(e) => handleChange("occupied", Number.parseInt(e.target.value) || 0)}
-  //                 />
-  //               </div>
-  //             </div>
-  //           </CardContent>
-  //         </Card>
-
-  //         {/* Property Media */}
-  //         <Card>
-  //           <CardHeader>
-  //             <CardTitle className="flex items-center gap-2">
-  //               <ImageIcon className="h-5 w-5" />
-  //               Property Media & Documents
-  //             </CardTitle>
-  //             <CardDescription>Upload images, floor plans, and important documents</CardDescription>
-  //           </CardHeader>
-  //           <CardContent className="space-y-4">
-  //             <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
-  //               <div className="flex flex-col items-center justify-center space-y-2">
-  //                 <Upload className="h-8 w-8 text-muted-foreground" />
-  //                 <div className="text-center">
-  //                   <Label
-  //                     htmlFor="file-upload"
-  //                     className="cursor-pointer text-sm font-medium text-primary hover:text-primary/80"
-  //                   >
-  //                     Click to upload files
-  //                   </Label>
-  //                   <p className="text-xs text-muted-foreground mt-1">Images, PDFs, and documents up to 10MB each</p>
-  //                 </div>
-  //                 <Input
-  //                   id="file-upload"
-  //                   type="file"
-  //                   multiple
-  //                   onChange={handleFileUpload}
-  //                   accept="image/*,.pdf,.doc,.docx"
-  //                   className="hidden"
-  //                 />
-  //               </div>
-  //             </div>
-
-  //             {property.files && property.files.length > 0 && (
-  //               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-  //                 {property.files.map((file: any, i: number) => (
-  //                   <div
-  //                     key={i}
-  //                     className="relative group rounded-lg overflow-hidden border bg-muted/50 hover:bg-muted transition-colors"
-  //                   >
-  //                     <div className="aspect-square flex items-center justify-center p-2">
-  //                       {file.file_category === "image" ? (
-  //                         <img
-  //                           src={file.preview || `${process.env.NEXT_PUBLIC_S3_URL}/${file.s3_key}`}
-  //                           alt={file.file_name}
-  //                           className="object-cover w-full h-full rounded"
-  //                         />
-  //                       ) : (
-  //                         <div className="flex flex-col items-center justify-center text-center p-4">
-  //                           <FileText className="h-8 w-8 text-muted-foreground mb-2" />
-  //                           <span className="text-xs font-medium truncate w-full px-1">
-  //                             {file.file_name}
-  //                           </span>
-  //                         </div>
-  //                       )}
-  //                     </div>
-  //                     <Button
-  //                       type="button"
-  //                       variant="destructive"
-  //                       size="sm"
-  //                       onClick={() => handleRemoveFile(i)}
-  //                       className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-  //                     >
-  //                       <X className="h-3 w-3" />
-  //                     </Button>
-  //                   </div>
-  //                 ))}
-  //               </div>
-  //             )}
-
-  //           </CardContent>
-  //         </Card>
-  //       </div>
-
-  //       <div className="space-y-6">
-  //         {/* Financial Information */}
-  //         <Card>
-  //           <CardHeader>
-  //             <CardTitle className="flex items-center gap-2">
-  //               <DollarSign className="h-5 w-5" />
-  //               Financial Details
-  //             </CardTitle>
-  //           </CardHeader>
-  //           <CardContent className="space-y-4">
-  //             <div className="space-y-2">
-  //               <Label htmlFor="currency">Currency</Label>
-  //               <Select value={property.currency || "NGN"} onValueChange={(value) => handleChange("currency", value)}>
-  //                 <SelectTrigger>
-  //                   <SelectValue />
-  //                 </SelectTrigger>
-  //                 <SelectContent>
-  //                   <SelectItem value="NGN">Nigerian Naira (₦)</SelectItem>
-  //                   <SelectItem value="USD">US Dollar ($)</SelectItem>
-  //                   <SelectItem value="EUR">Euro (€)</SelectItem>
-  //                   <SelectItem value="GBP">British Pound (£)</SelectItem>
-  //                 </SelectContent>
-  //               </Select>
-  //             </div>
-
-  //             {property.transaction_type === "rent" && (
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="monthly_rent">Monthly Rent</Label>
-  //                 <Input
-  //                   id="monthly_rent"
-  //                   value={property.monthly_rent || ""}
-  //                   onChange={(e) => handleChange("monthly_rent", e.target.value)}
-  //                   placeholder="0.00"
-  //                 />
-  //               </div>
-  //             )}
-
-  //             {property.transaction_type === "sale" && (
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="sale_price">Sale Price</Label>
-  //                 <Input
-  //                   id="sale_price"
-  //                   value={property.sale_price || ""}
-  //                   onChange={(e) => handleChange("sale_price", e.target.value)}
-  //                   placeholder="0.00"
-  //                 />
-  //               </div>
-  //             )}
-
-  //             {property.transaction_type === "lease" && (
-  //               <div className="space-y-2">
-  //                 <Label htmlFor="lease_price">Lease Price</Label>
-  //                 <Input
-  //                   id="lease_price"
-  //                   value={property.lease_price || ""}
-  //                   onChange={(e) => handleChange("lease_price", e.target.value)}
-  //                   placeholder="0.00"
-  //                 />
-  //               </div>
-  //             )}
-
-  //             <Separator />
-
-  //             <div className="space-y-2">
-  //               <Label htmlFor="security_deposit">Security Deposit</Label>
-  //               <Input
-  //                 id="security_deposit"
-  //                 value={property.security_deposit || ""}
-  //                 onChange={(e) => handleChange("security_deposit", e.target.value)}
-  //                 placeholder="0.00"
-  //               />
-  //             </div>
-
-  //             <div className="space-y-2">
-  //               <Label htmlFor="property_tax">Annual Property Tax</Label>
-  //               <Input
-  //                 id="property_tax"
-  //                 value={property.property_tax || ""}
-  //                 onChange={(e) => handleChange("property_tax", e.target.value)}
-  //                 placeholder="0.00"
-  //               />
-  //             </div>
-
-  //             <div className="space-y-2">
-  //               <Label htmlFor="insurance_cost">Annual Insurance</Label>
-  //               <Input
-  //                 id="insurance_cost"
-  //                 value={property.insurance_cost || ""}
-  //                 onChange={(e) => handleChange("insurance_cost", e.target.value)}
-  //                 placeholder="0.00"
-  //               />
-  //             </div>
-  //           </CardContent>
-  //         </Card>
-
-  //         {/* Management Information */}
-  //         <Card>
-  //           <CardHeader>
-  //             <CardTitle className="flex items-center gap-2">
-  //               <Users className="h-5 w-5" />
-  //               Management
-  //             </CardTitle>
-  //           </CardHeader>
-  //           <CardContent className="space-y-4">
-  //             <div className="space-y-2">
-  //               <Label htmlFor="property_manager">Property Manager</Label>
-  //               <Input
-  //                 id="property_manager"
-  //                 value={property.property_manager || ""}
-  //                 onChange={(e) => handleChange("property_manager", e.target.value)}
-  //                 placeholder="Manager name"
-  //               />
-  //             </div>
-
-  //             <div className="space-y-2">
-  //               <Label htmlFor="acquisition_date">Acquisition Date</Label>
-  //               <Input
-  //                 id="acquisition_date"
-  //                 type="date"
-  //                 value={property.acquisition_date || ""}
-  //                 onChange={(e) => handleChange("acquisition_date", e.target.value)}
-  //               />
-  //             </div>
-
-  //             <div className="space-y-2">
-  //               <Label htmlFor="last_renovation">Last Renovation</Label>
-  //               <Input
-  //                 id="last_renovation"
-  //                 type="date"
-  //                 value={property.last_renovation || ""}
-  //                 onChange={(e) => handleChange("last_renovation", e.target.value)}
-  //               />
-  //             </div>
-
-  //             <div className="space-y-2">
-  //               <Label htmlFor="pet_policy">Pet Policy</Label>
-  //               <Select value={property.pet_policy || ""} onValueChange={(value) => handleChange("pet_policy", value)}>
-  //                 <SelectTrigger>
-  //                   <SelectValue placeholder="Select policy" />
-  //                 </SelectTrigger>
-  //                 <SelectContent>
-  //                   <SelectItem value="allowed">Pets Allowed</SelectItem>
-  //                   <SelectItem value="not-allowed">No Pets</SelectItem>
-  //                   <SelectItem value="cats-only">Cats Only</SelectItem>
-  //                   <SelectItem value="dogs-only">Dogs Only</SelectItem>
-  //                   <SelectItem value="case-by-case">Case by Case</SelectItem>
-  //                 </SelectContent>
-  //               </Select>
-  //             </div>
-  //           </CardContent>
-  //         </Card>
-
-  //         {/* Quick Stats */}
-  //         <Card>
-  //           <CardHeader>
-  //             <CardTitle>Quick Stats</CardTitle>
-  //           </CardHeader>
-  //           <CardContent className="space-y-3">
-  //             <div className="flex justify-between items-center">
-  //               <span className="text-sm text-muted-foreground">Occupancy Rate</span>
-  //               <span className="font-medium">
-  //                 {property.units && property.occupied
-  //                   ? `${Math.round((property.occupied / property.units) * 100)}%`
-  //                   : "N/A"}
-  //               </span>
-  //             </div>
-  //             <div className="flex justify-between items-center">
-  //               <span className="text-sm text-muted-foreground">Vacant Units</span>
-  //               <span className="font-medium">
-  //                 {property.units && property.occupied ? property.units - property.occupied : "N/A"}
-  //               </span>
-  //             </div>
-  //             <div className="flex justify-between items-center">
-  //               <span className="text-sm text-muted-foreground">Price per Sq Ft</span>
-  //               <span className="font-medium">
-  //                 {property.sale_price && property.square_footage
-  //                   ? `₦${Math.round(Number.parseFloat(property.sale_price) / property.square_footage)}`
-  //                   : "N/A"}
-  //               </span>
-  //             </div>
-  //           </CardContent>
-  //         </Card>
-  //       </div>
-  //     </div>
-  //   </div>
-  // )
-
+ 
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -1110,6 +646,8 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
           <UnitsManagement
             propertyId={property.id}
             units={units}
+            showAddDialog = {showAddDialog}
+            setShowAddDialog = {setShowAddDialog}
             onAddUnit={handleAddUnit}
             onUpdateUnit={handleUpdateUnit}
             onDeleteUnit={handleDeleteUnit}

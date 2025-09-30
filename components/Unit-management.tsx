@@ -50,6 +50,8 @@ interface UnitsManagementProps {
   propertyId: string
   units: Unit[]
   onAddUnit: (unit: Omit<Unit, "id" | "created_at" | "updated_at">) => void
+  showAddDialog : boolean,
+   setShowAddDialog : (val : boolean) => void,
   onUpdateUnit: (id: string, unit: Partial<Unit>) => void
   onDeleteUnit: (id: string) => void
   transactionType: "rent" | "buy" | "lease"
@@ -79,10 +81,11 @@ export default function UnitsManagement({
   onAddUnit,
   onUpdateUnit,
   onDeleteUnit,
+  showAddDialog,
+   setShowAddDialog,
   transactionType,
   currency,
 }: UnitsManagementProps) {
-  const [showAddDialog, setShowAddDialog] = useState(false)
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null)
   const [newUnit, setNewUnit] = useState<Partial<Unit>>({
     property_id: propertyId,
@@ -96,27 +99,19 @@ export default function UnitsManagement({
     currency: currency,
   })
 
-  const handleAddUnit = () => {
-    if (newUnit.unit_number && newUnit.unit_type) {
-      onAddUnit(newUnit as Omit<Unit, "id" | "created_at" | "updated_at">)
-      setNewUnit({
-        property_id: propertyId,
-        unit_number: "",
-        unit_type: "apartment",
-        bedrooms: 1,
-        bathrooms: 1,
-        floor_number: 1,
-        status: "available",
-        amenities: [],
-        currency: currency,
-      })
-      setShowAddDialog(false)
-    }
-  }
+  // const handleAddUnit = () => {    
+  //   if (newUnit.unit_number && newUnit.unit_type) {
+  //     onAddUnit(newUnit as Omit<Unit, "id" | "created_at" | "updated_at">)
+     
+  //     setShowAddDialog(false)
+  //   }
+  //   onAddUnit(newUnit as Omit<Unit, "id" | "created_at" | "updated_at">)
+  // }
 
   const handleUpdateUnit = () => {
     if (editingUnit) {
       onUpdateUnit(editingUnit.id, editingUnit)
+      console.log("editing unit is " , editingUnit)
       setEditingUnit(null)
     }
   }
@@ -327,7 +322,10 @@ export default function UnitsManagement({
               <Button variant="outline" onClick={() => setShowAddDialog(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleAddUnit}>Add Unit</Button>
+              <Button onClick={() =>
+                {
+                  onAddUnit(newUnit as Omit<Unit, "id" | "created_at" | "updated_at">)}
+              }>Add Unit</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -569,7 +567,36 @@ export default function UnitsManagement({
                   </div>
                 </div>
               )}
-
+<div className="space-y-2">
+                  <Label htmlFor="price">
+                    {transactionType === "rent"
+                      ? "Monthly Rent"
+                      : transactionType === "buy"
+                        ? "Sale Price"
+                        : "Lease Price"}
+                  </Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    value={
+                      transactionType === "rent"
+                        ? editingUnit.monthly_rent || ""
+                        : transactionType === "buy"
+                          ? editingUnit.sale_price || ""
+                          : editingUnit.lease_price || ""
+                    }
+                    onChange={(e) => {
+                      const value = Number.parseFloat(e.target.value) || undefined
+                      if (transactionType === "rent") {
+                        setNewUnit({ ...editingUnit, monthly_rent: value })
+                      } else if (transactionType === "buy") {
+                        setNewUnit({ ...editingUnit, sale_price: value })
+                      } else {
+                        setNewUnit({ ...editingUnit, lease_price: value })
+                      }
+                    }}
+                  />
+                </div>
               <div className="space-y-2">
                 <Label>Amenities</Label>
                 <div className="grid grid-cols-3 gap-2">
