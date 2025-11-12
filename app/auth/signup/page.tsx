@@ -102,7 +102,7 @@ export default function SignUpPage() {
       if (res.ok) {
         let det = await res.json()
 
-        toast.success(det.message)
+        toast.success("Onboarding Successful! Redirecting to Sign In")
         router.push("/auth/signin")
         redirect("/auth/signin")
       }
@@ -113,7 +113,7 @@ export default function SignUpPage() {
       }
     } catch (error) {
 
-      toast.error("Internal Service Error")
+      // toast.error("Internal Service Error")
     }
     finally {
 

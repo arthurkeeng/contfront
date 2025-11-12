@@ -50,12 +50,12 @@ interface UnitsManagementProps {
   propertyId: string
   units: Unit[]
   onAddUnit: (unit: Omit<Unit, "id" | "created_at" | "updated_at">) => void
-  showAddDialog : boolean,
-   setShowAddDialog : (val : boolean) => void,
+  showAddDialog: boolean,
+  setShowAddDialog: (val: boolean) => void,
   onUpdateUnit: (id: string, unit: Partial<Unit>) => void
   onDeleteUnit: (id: string) => void
   transactionType: "rent" | "buy" | "lease"
-  currency: string
+  currency: string | "NGN"
 }
 
 const COMMON_AMENITIES = [
@@ -82,7 +82,7 @@ export default function UnitsManagement({
   onUpdateUnit,
   onDeleteUnit,
   showAddDialog,
-   setShowAddDialog,
+  setShowAddDialog,
   transactionType,
   currency,
 }: UnitsManagementProps) {
@@ -99,36 +99,31 @@ export default function UnitsManagement({
     currency: currency,
   })
 
-  // const handleAddUnit = () => {    
-  //   if (newUnit.unit_number && newUnit.unit_type) {
-  //     onAddUnit(newUnit as Omit<Unit, "id" | "created_at" | "updated_at">)
-     
-  //     setShowAddDialog(false)
-  //   }
-  //   onAddUnit(newUnit as Omit<Unit, "id" | "created_at" | "updated_at">)
-  // }
+
 
   const handleUpdateUnit = () => {
     if (editingUnit) {
       onUpdateUnit(editingUnit.id, editingUnit)
-      console.log("editing unit is " , editingUnit)
+      console.log("editing unit is ", editingUnit)
       setEditingUnit(null)
     }
   }
+const handleAmenityToggle = (amenity: string, isEditing = false) => {
+  if (isEditing && editingUnit) {
+    const updatedAmenities = editingUnit.amenities?.includes(amenity)
+      ? editingUnit.amenities.filter((a) => a !== amenity)
+      : [...(editingUnit.amenities || []), amenity]
 
-  const handleAmenityToggle = (amenity: string, isEditing = false) => {
-    if (isEditing && editingUnit) {
-      const updatedAmenities = editingUnit.amenities.includes(amenity)
-        ? editingUnit.amenities.filter((a) => a !== amenity)
-        : [...editingUnit.amenities, amenity]
-      setEditingUnit({ ...editingUnit, amenities: updatedAmenities })
-    } else {
-      const updatedAmenities = newUnit.amenities?.includes(amenity)
-        ? newUnit.amenities.filter((a) => a !== amenity)
-        : [...(newUnit.amenities || []), amenity]
-      setNewUnit({ ...newUnit, amenities: updatedAmenities })
-    }
+    setEditingUnit({ ...editingUnit, amenities: updatedAmenities })
+  } else {
+    const updatedAmenities = newUnit.amenities?.includes(amenity)
+      ? newUnit.amenities.filter((a) => a !== amenity)
+      : [...(newUnit.amenities || []), amenity]
+
+    setNewUnit({ ...newUnit, amenities: updatedAmenities })
   }
+}
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -322,9 +317,9 @@ export default function UnitsManagement({
               <Button variant="outline" onClick={() => setShowAddDialog(false)}>
                 Cancel
               </Button>
-              <Button onClick={() =>
-                {
-                  onAddUnit(newUnit as Omit<Unit, "id" | "created_at" | "updated_at">)}
+              <Button onClick={() => {
+                onAddUnit(newUnit as Omit<Unit, "id" | "created_at" | "updated_at">)
+              }
               }>Add Unit</Button>
             </DialogFooter>
           </DialogContent>
@@ -380,8 +375,8 @@ export default function UnitsManagement({
                   {currency}{" "}
                   {units.length > 0
                     ? Math.round(
-                        units.reduce((sum, unit) => sum + (getPriceForTransaction(unit) || 0), 0) / units.length,
-                      ).toLocaleString()
+                      units.reduce((sum, unit) => sum + (getPriceForTransaction(unit) || 0), 0) / units.length,
+                    ).toLocaleString()
                     : "0"}
                 </p>
               </div>
@@ -567,36 +562,71 @@ export default function UnitsManagement({
                   </div>
                 </div>
               )}
-<div className="space-y-2">
-                  <Label htmlFor="price">
-                    {transactionType === "rent"
-                      ? "Monthly Rent"
-                      : transactionType === "buy"
-                        ? "Sale Price"
-                        : "Lease Price"}
-                  </Label>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bedrooms">Bedrooms</Label>
                   <Input
-                    id="price"
+                    id="bedrooms"
                     type="number"
-                    value={
-                      transactionType === "rent"
-                        ? editingUnit.monthly_rent || ""
-                        : transactionType === "buy"
-                          ? editingUnit.sale_price || ""
-                          : editingUnit.lease_price || ""
-                    }
-                    onChange={(e) => {
-                      const value = Number.parseFloat(e.target.value) || undefined
-                      if (transactionType === "rent") {
-                        setNewUnit({ ...editingUnit, monthly_rent: value })
-                      } else if (transactionType === "buy") {
-                        setNewUnit({ ...editingUnit, sale_price: value })
-                      } else {
-                        setNewUnit({ ...editingUnit, lease_price: value })
-                      }
-                    }}
+                    min="0"
+                    value={editingUnit.bedrooms || 0}
+                    onChange={(e) => setEditingUnit({ ...editingUnit, bedrooms: Number.parseInt(e.target.value) || 0 })}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bathrooms">Bathrooms</Label>
+                  <Input
+                    id="bathrooms"
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={editingUnit.bathrooms || 0}
+                    onChange={(e) => setEditingUnit({ ...editingUnit, bathrooms: Number.parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="floor_number">Floor</Label>
+                  <Input
+                    id="floor_number"
+                    type="number"
+                    value={editingUnit.floor_number || ""}
+                    onChange={(e) =>
+                      setEditingUnit({ ...editingUnit, floor_number: Number.parseInt(e.target.value) || undefined })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="price">
+                  {transactionType === "rent"
+                    ? "Monthly Rent"
+                    : transactionType === "buy"
+                      ? "Sale Price"
+                      : "Lease Price"}
+                </Label>
+                <Input
+                  id="price"
+                  type="number"
+                  value={
+                    transactionType === "rent"
+                      ? editingUnit.monthly_rent || ""
+                      : transactionType === "buy"
+                        ? editingUnit.sale_price || ""
+                        : editingUnit.lease_price || ""
+                  }
+                  onChange={(e) => {
+                    const value = Number.parseFloat(e.target.value) || undefined
+                    if (transactionType === "rent") {
+                      setEditingUnit({ ...editingUnit, monthly_rent: value })
+                    } else if (transactionType === "buy") {
+                      setEditingUnit({ ...editingUnit, sale_price: value })
+                    } else {
+                      setEditingUnit({ ...editingUnit, lease_price: value })
+                    }
+                  }}
+                />
+              </div>
               <div className="space-y-2">
                 <Label>Amenities</Label>
                 <div className="grid grid-cols-3 gap-2">
@@ -604,7 +634,7 @@ export default function UnitsManagement({
                     <div key={amenity} className="flex items-center space-x-2">
                       <Checkbox
                         id={`edit-amenity-${amenity}`}
-                        checked={editingUnit.amenities.includes(amenity)}
+                        checked={editingUnit.amenities?.includes(amenity)}
                         onCheckedChange={() => handleAmenityToggle(amenity, true)}
                       />
                       <Label htmlFor={`edit-amenity-${amenity}`} className="text-sm">

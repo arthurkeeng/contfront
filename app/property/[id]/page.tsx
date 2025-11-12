@@ -165,12 +165,28 @@ const mockPropertyManager: PropertyManager = {
 export default function PropertyDetailPage({ params }: { params: { id: string } }) {
   const [property, setProperty] = useState<Property>(mockProperty)
   const [availableUnits, setAvailableUnits] = useState<Unit[]>([])
+  const [units, setUnits] = useState<Unit[]>([])
   const [propertyManager, setPropertyManager] = useState<PropertyManager>(mockPropertyManager)
   const router = useRouter()
-
   useEffect(() => {
-    const available = mockUnits.filter((unit) => unit.status === "available")
-    setAvailableUnits(available)
+
+    const singleProperty = (async () => {
+      try {
+        
+        let req = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/clients/property/${params.id}`)
+        let data = await req.json()
+        setProperty(data.properties[0])
+        setUnits(data.units)
+        
+        const available = data.units.filter((unit: any) => unit.status === "available")
+        console.log('avail' , available)
+        setAvailableUnits(available)
+
+      } catch (error) {
+        
+      }
+    })
+    singleProperty()
   }, [])
 
   const getPrice = (property: Property) => {
@@ -334,7 +350,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                       <div>
                         <h4 className="text-sm font-medium mb-2">Amenities</h4>
                         <div className="flex flex-wrap gap-2">
-                          {unit.amenities.map((amenity) => (
+                          {unit.amenities && unit.amenities.map((amenity) => (
                             <div
                               key={amenity}
                               className="flex items-center gap-1 text-xs bg-muted px-2 py-1 rounded-md"

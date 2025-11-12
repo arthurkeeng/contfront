@@ -19,56 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import UnitsManagement from "@/components/Unit-management"
 
 
-interface PropertyFile {
-  id?: string
-  file_name: string
-  file_type: string
-  file_category: "image" | "document"
-  s3_key: string
-  preview?: string // for local uploads
-}
 
-interface Property {
-  id: string
-  property_name: string
-  property_address: string
-  category: string
-  transaction_type: string
-  property_type?: string
-  units?: number
-  occupied?: number
-  vacant?: number
-  monthly_rent?: string
-  sale_price?: string
-  lease_price?: string
-  currency?: string
-  property_status: string
-  square_footage?: number
-  lot_size?: number
-  bedrooms?: number
-  bathrooms?: number
-  year_built?: number
-  parking_spaces?: number
-  property_description?: string
-  amenities?: string[]
-  neighborhood?: string
-  city?: string
-  state?: string
-  zip_code?: string
-  country?: string
-  property_manager?: string
-  acquisition_date?: string
-  last_renovation?: string
-  property_tax?: string
-  insurance_cost?: string
-  hoa_fees?: string
-  utilities_included?: string[]
-  pet_policy?: string
-  lease_terms?: string
-  security_deposit?: string
-  application_fee?: string
-  files: PropertyFile[]
-}
+
 
 const mockUnits = [
   {
@@ -131,10 +83,10 @@ const mockUnits = [
 
 export default function PropertyPage({ propertyId }: { propertyId: string }) {
   const { property_id } = useParams()
-    const [units, setUnits] = useState()
-    // this dialog box is for the adding units
-    const [showAddDialog,
-   setShowAddDialog ] = useState(false)
+  const [units, setUnits] = useState<typeof mockUnits>([])
+  // this dialog box is for the adding units
+  const [showAddDialog,
+    setShowAddDialog] = useState(false)
 
   const [property, setProperty] = useState<Property | null>(null)
   // const [files, setFiles] = useState<any>(null)
@@ -154,7 +106,7 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
         )
         if (res.ok) {
           const data = await res.json()
-          setProperty({...data.property , files : data.files})
+          setProperty({ ...data.property, files: data.files })
           setUnits(data.units)
           // setFiles(data.files)
         } else {
@@ -170,7 +122,26 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
     fetchProperty()
   }, [propertyId])
 
+  const handleDeleteProperty = async () => {
+    if (!property) return;
 
+    if (!confirm("Are you sure you want to delete this property? This action cannot be undone.")) { return }
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/${user?.user_id}/property/${property.id}/company/${company?.company_id}`, {
+        method: "DELETE"
+      })
+
+      if (res.ok) {
+        let response = await res.json()
+        toast.success(response.message)
+        router.push('/dashboard')
+      }
+    } catch (error) {
+      toast.error("Failed to delete property")
+    }
+
+  }
   const handleChange = (field: keyof Property, value: string | number | string[]) => {
     if (!property) return
     setProperty({ ...property, [field]: value })
@@ -194,6 +165,7 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
     updatedFiles.splice(index, 1)
     setProperty({ ...property, files: updatedFiles })
   }
+
 
   const handleSave = async () => {
     if (!property) return
@@ -233,6 +205,7 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
       })
 
       if (res.ok) {
+        setIsEditing(false)
         toast.success("Property updated successfully")
         router.refresh()
       } else {
@@ -246,62 +219,62 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
     }
   }
 
-  
-  const handleAddUnit = async(newUnit: Omit<(typeof mockUnits)[0], "id" | "created_at" | "updated_at">) => {
-   
-      let req = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${property_id}/units`, {
-        method : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...newUnit, 
-        })
+
+  const handleAddUnit = async (newUnit: Omit<Unit, "id" | "created_at" | "updated_at">) => {
+
+    let req = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${property_id}/units`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...newUnit,
       })
-      if (req.ok){
-        let response = await req.json()
-        setShowAddDialog(false)
-        toast.success(response.message)
-      }
-      else{
-        toast.error("Failed to add unit")
-      }
-    
-  }
-
-  const handleUpdateUnit = async (id: string, updatedUnit: Partial<(typeof mockUnits)[0]>) => {
-
-    console.log("the id is " , updatedUnit)
-    const req = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/property/${property_id}/unit/${id}`,{
-      method : "PATCH",
-       headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...updatedUnit
-        })
-
     })
-  
-    if(req.ok){
-      let response =await  req.json()
-      router.push('/dashboard')
-      
+    if (req.ok) {
+      let response = await req.json()
+      setShowAddDialog(false)
       toast.success(response.message)
     }
-    else{
+    else {
+      toast.error("Failed to add unit")
+    }
+
+  }
+
+  const handleUpdateUnit = async (id: string, updatedUnit: Partial<Unit>) => {
+
+    console.log("the id is ", updatedUnit)
+    const req = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/property/${property_id}/unit/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...updatedUnit
+      })
+
+    })
+
+    if (req.ok) {
+      let response = await req.json()
+      router.push('/dashboard')
+
+      toast.success(response.message)
+    }
+    else {
       toast.error("Failed to Update Unit")
     }
   }
 
   const handleDeleteUnit = async (id: string) => {
-    const req = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/property/${property_id}/unit/${id}`,{
-      method : "DELETE"
+    const req = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/property/${property_id}/unit/${id}`, {
+      method: "DELETE"
     })
 
-    if(req.ok){
+    if (req.ok) {
       console.log("deleted")
       router.push('/dashboard')
-      
+
       toast.success("deleted")
     }
-    else{
+    else {
       toast.error("Failed to Delete Unit")
     }
   }
@@ -334,7 +307,7 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
       </div>
     )
 
- 
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -646,13 +619,13 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
           <UnitsManagement
             propertyId={property.id}
             units={units}
-            showAddDialog = {showAddDialog}
-            setShowAddDialog = {setShowAddDialog}
+            showAddDialog={showAddDialog}
+            setShowAddDialog={setShowAddDialog}
             onAddUnit={handleAddUnit}
             onUpdateUnit={handleUpdateUnit}
             onDeleteUnit={handleDeleteUnit}
-            transactionType={property.transaction_type}
-            currency={property.currency}
+            transactionType={property.transaction_type as "rent" | "buy" | "lease"}
+            currency={property.currency || "NGN"}
           />
         </TabsContent>
 
@@ -668,41 +641,52 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
             </CardHeader>
             <CardContent>
 
-{
-  property?.files && property.files.length > 0 ? (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {property.files.map((file: any, i: number) => (
-        <div
-          key={i}
-          className="flex flex-col items-center justify-center border rounded-xl p-4 shadow-sm hover:shadow-md transition"
-        >
-          <FileText className="h-10 w-10 text-blue-500 mb-2" />
-          <p className="text-sm font-medium text-center truncate w-full">
-            {file.file_name}
-          </p>
-          <a
-            href={file.url}
-            download
-            className="mt-3 inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
-          >
-            <Download className="h-4 w-4" /> Download
-          </a>
-        </div>
-      ))}
-    </div>
-  ) : (
-    <div className="text-center py-8">
-      <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-      <p className="text-muted-foreground">No Files uploaded yet.</p>
-    </div>
-  )
-}
+              {
+                property?.files && property.files.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {property.files.map((file: any, i: number) => (
+                      <div
+                        key={i}
+                        className="flex flex-col items-center justify-center border rounded-xl p-4 shadow-sm hover:shadow-md transition"
+                      >
+                        <FileText className="h-10 w-10 text-blue-500 mb-2" />
+                        <p className="text-sm font-medium text-center truncate w-full">
+                          {file.file_name}
+                        </p>
+                        <a
+                          href={file.url}
+                          download
+                          className="mt-3 inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                        >
+                          <Download className="h-4 w-4" /> Download
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No Files uploaded yet.</p>
+                  </div>
+                )
+              }
 
 
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+      <div className="flex justify-end mt-8">
+        <Button
+          variant="destructive"
+          onClick={handleDeleteProperty}
+          className="gap-2"
+        >
+          <X className="h-4 w-4" />
+          Delete Property
+        </Button>
+      </div>
+
     </div>
   )
 }

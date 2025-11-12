@@ -28,102 +28,60 @@ interface Property {
   created_at: string
 }
 
-// Mock data - replace with actual API call
-const mockProperties: Property[] = [
-  {
-    id: "123e4567-e89b-12d3-a456-426614174000",
-    property_name: "Sunset Gardens Estate",
-    property_address: "123 Sunset Boulevard, Victoria Island, Lagos, Nigeria",
-    category: "house",
-    transaction_type: "rent",
-    property_type: "Residential",
-    units: 24,
-    occupied: 18,
-    vacant: 6,
-    monthly_rent: 850000,
-    currency: "NGN",
-    property_status: "Active",
-    created_at: "2024-01-15T10:30:00Z",
-  },
-  {
-    id: "456e7890-e89b-12d3-a456-426614174001",
-    property_name: "Marina Heights Complex",
-    property_address: "45 Marina Street, Lagos Island, Lagos, Nigeria",
-    category: "house",
-    transaction_type: "buy",
-    property_type: "Commercial",
-    units: 12,
-    occupied: 10,
-    vacant: 2,
-    sale_price: 45000000,
-    currency: "NGN",
-    property_status: "Active",
-    created_at: "2024-02-20T14:15:00Z",
-  },
-  {
-    id: "789e0123-e89b-12d3-a456-426614174002",
-    property_name: "Green Valley Apartments",
-    property_address: "78 Admiralty Way, Lekki Phase 1, Lagos, Nigeria",
-    category: "house",
-    transaction_type: "lease",
-    property_type: "Residential",
-    units: 36,
-    occupied: 32,
-    vacant: 4,
-    lease_price: 1200000,
-    currency: "NGN",
-    property_status: "Active",
-    created_at: "2024-03-10T09:45:00Z",
-  },
-  {
-    id: "012e3456-e89b-12d3-a456-426614174003",
-    property_name: "Corporate Plaza",
-    property_address: "12 Adeola Odeku Street, Victoria Island, Lagos, Nigeria",
-    category: "land",
-    transaction_type: "buy",
-    property_type: "Commercial",
-    units: 8,
-    occupied: 6,
-    vacant: 2,
-    sale_price: 75000000,
-    currency: "NGN",
-    property_status: "Under Maintenance",
-    created_at: "2024-04-05T16:20:00Z",
-  },
-]
+
 
 export default function PropertiesList() {
-  const [properties, setProperties] = useState<Property[]>(mockProperties)
+  const [properties, setProperties] = useState<Property[]>([])
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [typeFilter, setTypeFilter] = useState("all")
   const [transactionFilter, setTransactionFilter] = useState("all")
   const router = useRouter()
 
-  useEffect(() => {
-    let filtered = properties.filter((property) => property.property_status.toLowerCase() === "active")
-
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (property) =>
-          property.property_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          property.property_address.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
+ useEffect(() => {
+  // Fetch properties once when component mounts
+  const fetchProperties = async () => {
+    try {
+      const req = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/client/properties`)
+      const response = await req.json()
+      setProperties(response.properties || [])
+    } catch (error) {
+      console.error("Error fetching properties:", error)
     }
+  }
 
-    // Type filter
-    if (typeFilter !== "all") {
-      filtered = filtered.filter((property) => property.property_type?.toLowerCase() === typeFilter.toLowerCase())
-    }
+  fetchProperties()
+}, []) 
 
-    // Transaction filter
-    if (transactionFilter !== "all") {
-      filtered = filtered.filter((property) => property.transaction_type === transactionFilter)
-    }
+useEffect(() => {
+  let filtered = properties.filter(
+    (property) => property.property_status.toLowerCase() === "active"
+  )
 
-    setFilteredProperties(filtered)
-  }, [properties, searchTerm, typeFilter, transactionFilter])
+  if (searchTerm) {
+    filtered = filtered.filter(
+      (property) =>
+        property.property_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        property.property_address.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }
+
+  if (typeFilter !== "all") {
+    filtered = filtered.filter(
+      (property) =>
+        property.property_type?.toLowerCase() === typeFilter.toLowerCase()
+    )
+  }
+
+  if (transactionFilter !== "all") {
+    filtered = filtered.filter(
+      (property) => property.transaction_type === transactionFilter
+    )
+  }
+
+  setFilteredProperties(filtered)
+}, [searchTerm, typeFilter, transactionFilter, properties]) 
+
 
   const getPrice = (property: Property) => {
     switch (property.transaction_type) {

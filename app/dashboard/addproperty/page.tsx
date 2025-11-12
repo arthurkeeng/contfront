@@ -12,12 +12,22 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { fi } from "date-fns/locale"
 
+// interface UploadFile{
+//   file_name: string,
+//           file_type: string,
+//           file_category: string,
+//           s3_key: string,
+//           file_size: number,
+// }
+
 interface UploadFile{
-  file_name: string,
+          file_name: string,
           file_type: string,
           file_category: string,
-          s3_key: string,
+          s3_key?: string,
+          cloudinary_url: string,
           file_size: number,
+          public_id : string
 }
 
 export default function AddPropertyForm() {
@@ -81,86 +91,121 @@ export default function AddPropertyForm() {
   }
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+ const handleSubmit = async (e: React.FormEvent) => {
 
-    const uploadedFiles : UploadFile[]= []
-    try {
-      setIsLoading(true)
+  e.preventDefault()
+  setIsLoading(true)
 
-      const uploadFiles = async (file : File , category : "image" | "document") =>{
-        const presigned_url = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/s3/presign`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              filename: file.name,
-              filetype: file.type
-            })
-          })
+  try {
+    const uploadedFiles: UploadFile[] = []
+    // This is incase i go back to AWS
+    //  const uploadFiles = async (file : File , category : "image" | "document") =>{
+    //     const presigned_url = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/s3/presign`, {
+    //         method: "POST",
+    //         headers: { "Content-Type": "application/json" },
+    //         body: JSON.stringify({
+    //           filename: file.name,
+    //           filetype: file.type
+    //         })
+    //       })
 
-           const { url, key } = await presigned_url.json()
+    //        const { url, key } = await presigned_url.json()
 
-            const uploadRes = await fetch(url, {
-            method: "PUT",
-            headers: { "Content-Type": file.type },
-            body: file
-          })
+    //         const uploadRes = await fetch(url, {
+    //         method: "PUT",
+    //         headers: { "Content-Type": file.type },
+    //         body: file
+    //       })
 
-          if (uploadRes.ok){
-             uploadedFiles.push({
-          file_name: file.name,
-          file_type: file.type,
-          file_category: category,
-          s3_key: key,
-          file_size: file.size,
+    //       if (uploadRes.ok){
+    //          uploadedFiles.push({
+    //       file_name: file.name,
+    //       file_type: file.type,
+    //       file_category: category,
+    //       s3_key: key,
+    //       file_size: file.size,
+    //     })
+    //       }
+    //       else{
+    //         toast.error(`Failed to upload ${file.name}`)
+    //       }
+    //   }
+
+    const uploadFiles = async (file: File, category: "image" | "document") => {
+      try {
+        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+        const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+
+        const fd = new FormData()
+        fd.append("file", file)
+        fd.append("upload_preset", uploadPreset as string)
+        fd.append("folder", category)
+
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+          method: "POST",
+          body: fd,
         })
+
+        const data = await res.json()
+
+        if (res.ok) {
+          return {
+            file_name: file.name,
+            file_type: file.type,
+            file_category: category,
+            cloudinary_url: data.secure_url,
+            public_id: data.public_id,
+            file_size: file.size,
           }
-          else{
-            toast.error(`Failed to upload ${file.name}`)
-          }
-      }
-
-        if (images) {
-        for (const file of Array.from(images)) {
-            await uploadFiles(file, "image")
+        } else {
+          toast.error(`Failed to upload ${file.name}`)
+          return null
         }
-      
+      } catch (err) {
+        toast.error(`Error uploading ${file.name}`)
+        return null
       }
-        if (documents) {
-        for (const file of Array.from(documents)) {
-            await uploadFiles(file, "document")
-        }
-      
-      }
-        const payload = {
-        ...formData,
-        company_id: company?.company_id,
-        user_id: user?.user_id,
-        files : uploadedFiles
-      }
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/add_property`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      })
-
-      if (res.ok) {
-        toast.success("Property Created Successfully");
-        router.push("/dashboard")
-      } else {
-        toast.error("Failed to Create Property");
-      }
-
-    } catch (error) {
-      
     }
-    finally{
-      setIsLoading(false)
+
+    // Upload all files concurrently
+    const imageUploads = images
+      ? await Promise.all(Array.from(images).map(file => uploadFiles(file, "image")))
+      : []
+    const documentUploads = documents
+      ? await Promise.all(Array.from(documents).map(file => uploadFiles(file, "document")))
+      : []
+
+    // Combine successful uploads
+    const allUploads = [...imageUploads, ...documentUploads].filter(Boolean) as UploadFile[]
+
+    const payload = {
+      ...formData,
+      company_id: company?.company_id,
+      user_id: user?.user_id,
+      files: allUploads,
     }
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/add_property`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+
+    if (res.ok) {
+      toast.success("Property Created Successfully")
+      router.push("/dashboard")
+    } else {
+      toast.error("Failed to Create Property")
+    }
+
+  } catch (error) {
+    console.error(error)
+    toast.error("An unexpected error occurred")
+  } finally {
+    setIsLoading(false)
   }
+}
+
   return (
     <Card className="max-w-4xl mx-auto mt-8 shadow-lg rounded-2xl border border-gray-200">
       <CardHeader className="pb-2">
