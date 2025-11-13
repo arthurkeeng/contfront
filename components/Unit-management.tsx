@@ -21,30 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Plus, Edit, Trash2, Home, Bed, Bath, Square, DollarSign, User } from "lucide-react"
 
-interface Unit {
-  id: string
-  property_id: string
-  unit_number: string
-  unit_type: string
-  bedrooms: number
-  bathrooms: number
-  floor_number?: number
-  square_footage?: number
-  monthly_rent?: number
-  sale_price?: number
-  lease_price?: number
-  currency: string
-  status: "available" | "occupied" | "maintenance" | "reserved"
-  amenities: string[]
-  description?: string
-  tenant_name?: string
-  tenant_email?: string
-  tenant_phone?: string
-  lease_start?: string
-  lease_end?: string
-  created_at: string
-  updated_at: string
-}
+
 
 interface UnitsManagementProps {
   propertyId: string
@@ -104,7 +81,6 @@ export default function UnitsManagement({
   const handleUpdateUnit = () => {
     if (editingUnit) {
       onUpdateUnit(editingUnit.id, editingUnit)
-      console.log("editing unit is ", editingUnit)
       setEditingUnit(null)
     }
   }

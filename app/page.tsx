@@ -26,10 +26,10 @@ export default function LandingPage() {
         industry: industry.trim(),
       }),
     })
-    console.log(res)
+   
     if (res.ok) {
       const det = await res.json()
-      console.log("the data is ", det)
+     
       try {
         await handlePay(det.price, det.id, det.industry)
       } catch (error) {}
@@ -53,7 +53,6 @@ export default function LandingPage() {
         })
           .then((res) => res.json())
           .then(async ({ data }) => {
-            console.log("the data is ", data)
             if (data.status === "success") {
               // the follow up will be placed here
               localStorage.setItem(
@@ -488,7 +487,6 @@ export default function LandingPage() {
                       onClick={async () => {
                         try {
                           const subscription = await getSubscriptionPlan(plan.name, activeTab)
-                          console.log("subscription from button click", subscription)
 
                           // Example: save to state or redirect
                           // setSelectedPlan(subscription);

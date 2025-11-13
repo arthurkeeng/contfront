@@ -48,7 +48,6 @@ export default function SignUpPage() {
     let items = localStorage.getItem("credentials")
 
     if (items) {
-      console.log('the items are ', items)
       setItems(JSON.parse(items))
     }
 
@@ -108,7 +107,6 @@ export default function SignUpPage() {
       }
       else {
 
-        console.log(res)
         toast("Company Onboarding Unsuccessful")
       }
     } catch (error) {

@@ -71,8 +71,7 @@ export default function SignInPage() {
         })
       )
       setUser(user)
-      console.log(company)
-      console.log(user)
+     
       setCompany(company)
       localStorage.setItem(
         "propertyflow_company",
@@ -86,7 +85,6 @@ export default function SignInPage() {
     }
     else {
 
-      console.log(res)
       toast("Sign in Unsuccessful")
     }
     setIsLoading(false)

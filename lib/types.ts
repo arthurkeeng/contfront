@@ -50,11 +50,14 @@ interface MaintenanceRequest {
   comments: number
 }
 
-
 interface Property {
-  id: string
+    id: string
   property_name: string
   property_address: string
+ 
+  description?: string
+  created_at: string
+
   category: string
   transaction_type: string
   property_type?: string
@@ -99,4 +102,38 @@ interface PropertyFile {
   file_category: "image" | "document"
   s3_key: string
   preview?: string // for local uploads
+}
+interface PropertyManager {
+  name: string
+  email: string
+  phone?: string
+}
+
+interface Unit {
+  id: string
+  property_id: string
+  unit_number: string
+  unit_type: string
+  bedrooms: number
+  bathrooms: number
+  floor_number?: number
+  square_footage?: number
+  monthly_rent?: number
+  sale_price?: number
+  lease_price?: number
+  currency: string
+  status: "available" | "occupied" | "maintenance" | "reserved"
+  amenities: string[]
+  description?: string
+  tenant_name?: string
+  tenant_email?: string
+  tenant_phone?: string
+  lease_start?: string
+  lease_end?: string
+  created_at: string
+  updated_at: string
+}
+
+interface Files{
+  cloudinary_url : string
 }

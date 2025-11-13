@@ -242,7 +242,6 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
 
   const handleUpdateUnit = async (id: string, updatedUnit: Partial<Unit>) => {
 
-    console.log("the id is ", updatedUnit)
     const req = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/property/${property_id}/unit/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -269,7 +268,7 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
     })
 
     if (req.ok) {
-      console.log("deleted")
+      
       router.push('/dashboard')
 
       toast.success("deleted")

@@ -64,10 +64,9 @@ export default function PropertyDashboard() {
       })
       if (res.ok) {
         let props: Property[] = await res.json()
-        console.log("the properties are", props)
+        
         setProperties(props)
       } else {
-        console.log("error fetching properties")
       }
     }
     getProperties()

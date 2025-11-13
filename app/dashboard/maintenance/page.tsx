@@ -11,7 +11,6 @@ export default function MaintenancePage() {
   const [requests, setRequests] = useState<any[]>([])
 
   const handleSubmit = (data: any) => {
-    console.log("[v0] New maintenance request:", data)
     // TODO: Submit to API
     setRequests((prev) => [
       ...prev,

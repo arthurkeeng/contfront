@@ -25,165 +25,33 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-interface Property {
-  id: string
-  property_name: string
-  property_address: string
-  category: string
-  transaction_type: string
-  property_type?: string
-  units: number
-  occupied: number
-  vacant: number
-  monthly_rent?: number
-  sale_price?: number
-  lease_price?: number
-  currency: string
-  property_status: string
-  description?: string
-  created_at: string
-}
 
-interface Unit {
-  id: string
-  property_id: string
-  unit_number: string
-  unit_type: string
-  bedrooms: number
-  bathrooms: number
-  floor_number: number
-  square_footage: number
-  monthly_rent?: number
-  sale_price?: number
-  lease_price?: number
-  currency: string
-  status: string
-  amenities: string[]
-  description?: string
-}
 
-interface PropertyManager {
-  id: string
-  name: string
-  email: string
-  phone: string
-  company: string
-  role: string
-}
 
-// Mock data - replace with actual API calls
-const mockProperty: Property = {
-  id: "123e4567-e89b-12d3-a456-426614174000",
-  property_name: "Sunset Gardens Estate",
-  property_address: "123 Sunset Boulevard, Victoria Island, Lagos, Nigeria",
-  category: "house",
-  transaction_type: "rent",
-  property_type: "Residential",
-  units: 24,
-  occupied: 18,
-  vacant: 6,
-  monthly_rent: 850000,
-  currency: "NGN",
-  property_status: "Active",
-  description:
-    "A beautiful residential estate with modern amenities and excellent security. Located in the heart of Victoria Island with easy access to business districts and recreational facilities.",
-  created_at: "2024-01-15T10:30:00Z",
-}
-
-const mockUnits: Unit[] = [
-  {
-    id: "unit-001",
-    property_id: "123e4567-e89b-12d3-a456-426614174000",
-    unit_number: "A101",
-    unit_type: "Apartment",
-    bedrooms: 2,
-    bathrooms: 2,
-    floor_number: 1,
-    square_footage: 1200,
-    monthly_rent: 750000,
-    currency: "NGN",
-    status: "available",
-    amenities: ["wifi", "parking", "security", "gym"],
-    description: "Spacious 2-bedroom apartment with modern finishes and great natural light.",
-  },
-  {
-    id: "unit-002",
-    property_id: "123e4567-e89b-12d3-a456-426614174000",
-    unit_number: "B205",
-    unit_type: "Apartment",
-    bedrooms: 3,
-    bathrooms: 2,
-    floor_number: 2,
-    square_footage: 1500,
-    monthly_rent: 950000,
-    currency: "NGN",
-    status: "available",
-    amenities: ["wifi", "parking", "security", "gym", "pool"],
-    description: "Premium 3-bedroom apartment with balcony and pool access.",
-  },
-  {
-    id: "unit-003",
-    property_id: "123e4567-e89b-12d3-a456-426614174000",
-    unit_number: "C301",
-    unit_type: "Penthouse",
-    bedrooms: 4,
-    bathrooms: 3,
-    floor_number: 3,
-    square_footage: 2000,
-    monthly_rent: 1200000,
-    currency: "NGN",
-    status: "available",
-    amenities: ["wifi", "parking", "security", "gym", "pool"],
-    description: "Luxury penthouse with panoramic city views and premium amenities.",
-  },
-  {
-    id: "unit-004",
-    property_id: "123e4567-e89b-12d3-a456-426614174000",
-    unit_number: "A102",
-    unit_type: "Apartment",
-    bedrooms: 1,
-    bathrooms: 1,
-    floor_number: 1,
-    square_footage: 800,
-    monthly_rent: 600000,
-    currency: "NGN",
-    status: "occupied",
-    amenities: ["wifi", "parking", "security"],
-    description: "Cozy 1-bedroom apartment perfect for singles or couples.",
-  },
-]
-
-const mockPropertyManager: PropertyManager = {
-  id: "pm-001",
-  name: "Adebayo Johnson",
-  email: "adebayo.johnson@sunsetgardens.com",
-  phone: "+234 803 123 4567",
-  company: "Sunset Properties Ltd",
-  role: "Property Manager",
-}
 
 export default function PropertyDetailPage({ params }: { params: { id: string } }) {
-  const [property, setProperty] = useState<Property>(mockProperty)
+  const [property, setProperty] = useState<Property>([] as any)
   const [availableUnits, setAvailableUnits] = useState<Unit[]>([])
   const [units, setUnits] = useState<Unit[]>([])
-  const [propertyManager, setPropertyManager] = useState<PropertyManager>(mockPropertyManager)
+  const [files, setFiles] = useState<Files[]>([])
+  const [propertyManagers, setPropertyManagers] = useState<PropertyManager[]>([] as any)
   const router = useRouter()
   useEffect(() => {
 
     const singleProperty = (async () => {
       try {
-        
+
         let req = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/clients/property/${params.id}`)
         let data = await req.json()
+        setPropertyManagers(data.managers)
         setProperty(data.properties[0])
         setUnits(data.units)
-        
+        setFiles(data.files)
         const available = data.units.filter((unit: any) => unit.status === "available")
-        console.log('avail' , available)
         setAvailableUnits(available)
 
       } catch (error) {
-        
+
       }
     })
     singleProperty()
@@ -307,9 +175,10 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
         </div>
 
         <Tabs defaultValue="units" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="units">Available Units ({availableUnits.length})</TabsTrigger>
-            <TabsTrigger value="contact">Contact Manager</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="units">Units ({availableUnits.length})</TabsTrigger>
+            <TabsTrigger value="contact">Manager</TabsTrigger>
+            <TabsTrigger value="files">Images</TabsTrigger>
           </TabsList>
 
           <TabsContent value="units" className="space-y-6">
@@ -387,60 +256,127 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
             )}
           </TabsContent>
 
-          <TabsContent value="contact" className="space-y-6">
-            <Card className="max-w-2xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Property Manager
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                    <User className="h-8 w-8 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{propertyManager.name}</h3>
-                    <p className="text-muted-foreground">{propertyManager.role}</p>
-                    <p className="text-sm text-muted-foreground">{propertyManager.company}</p>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Phone className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{propertyManager.phone}</p>
-                      <p className="text-sm text-muted-foreground">Phone</p>
+          {
+            propertyManagers.length > 0 && propertyManagers.map((manager, index) => {
+              return (<TabsContent value="contact" className="space-y-6" key={index}>
+                <Card className="max-w-2xl">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <User className="h-5 w-5" />
+                      Property Manager
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                        <User className="h-8 w-8 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg">{manager.name}</h3>
+                        <p className="text-sm text-muted-foreground">{property.property_name}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{propertyManager.email}</p>
-                      <p className="text-sm text-muted-foreground">Email</p>
+
+                    <Separator />
+
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <Phone className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">{manager?.phone}</p>
+                          <p className="text-sm text-muted-foreground">Phone</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Mail className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">{manager.email}</p>
+                          <p className="text-sm text-muted-foreground">Email</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                <Separator />
+                    <Separator />
 
-                <div className="flex gap-3">
-                  <Button className="flex-1">
-                    <Phone className="h-4 w-4 mr-2" />
-                    Call Now
-                  </Button>
-                  <Button variant="outline" className="flex-1 bg-transparent">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Send Email
-                  </Button>
+                    <div className="flex gap-3">
+                      <Button className="flex-1">
+                        <Phone className="h-4 w-4 mr-2" />
+                        Call Now
+                      </Button>
+                      <Button variant="outline" className="flex-1 bg-transparent">
+                        <Mail className="h-4 w-4 mr-2" />
+                        Send Email
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>)
+            })
+          }
+{
+  files.length > 0 && (
+    <TabsContent value="files" className="space-y-6">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            🏠 Property Images
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="relative w-full overflow-hidden">
+
+          {/* Image carousel */}
+          <div
+            id="property-carousel"
+            className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth w-full h-[480px] md:h-[560px]"
+          >
+            {files.map((file, index) => (
+              <div
+                key={index}
+                className="flex-shrink-0 w-full h-full snap-center relative"
+              >
+                <img
+                  src={file.cloudinary_url}
+                  alt={`Property image ${index + 1}`}
+                  className="w-full h-full object-cover rounded-xl"
+                />
+
+                {/* Optional caption overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-black/40 text-white text-sm p-2">
+                  Image {index + 1} of {files.length}
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
+            ))}
+          </div>
+
+          {/* Scroll buttons */}
+          <button
+            onClick={() => {
+              const el = document.getElementById('property-carousel');
+              if (el) el.scrollBy({ left: -window.innerWidth, behavior: 'smooth' });
+            }}
+            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white text-primary shadow rounded-full p-2"
+          >
+            ‹
+          </button>
+
+          <button
+            onClick={() => {
+              const el = document.getElementById('property-carousel');
+              if (el) el.scrollBy({ left: window.innerWidth, behavior: 'smooth' });
+            }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white text-primary shadow rounded-full p-2"
+          >
+            ›
+          </button>
+        </CardContent>
+      </Card>
+    </TabsContent>
+  )
+}
+
+
+
         </Tabs>
       </div>
     </div>
