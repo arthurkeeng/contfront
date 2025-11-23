@@ -73,7 +73,7 @@ export default function SignUpPage() {
     // Call to backend API to create company + admin user
     try {
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/onboard`,
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/onboard`,
         {
           method: "POST",
           headers: {
@@ -95,7 +95,8 @@ export default function SignUpPage() {
             subscription_id: items?.subscription_id,
             paystack_ref: items?.paystack_ref,
             amount: parseInt(items?.amount!)
-          })
+          }), 
+          credentials : "include"
         }
       )
       if (res.ok) {

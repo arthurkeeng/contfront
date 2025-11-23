@@ -50,6 +50,7 @@ export default function LandingPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ reference: tran.reference }),
+          credentials: "include"
         })
           .then((res) => res.json())
           .then(async ({ data }) => {
