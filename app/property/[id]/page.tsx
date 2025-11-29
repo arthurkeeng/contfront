@@ -239,7 +239,6 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                           <p className="text-sm text-muted-foreground">Floor {unit.floor_number}</p>
                           <p className="font-semibold text-primary">{getUnitPrice(unit)}</p>
                         </div>
-                        <Button size="sm">Contact Manager</Button>
                       </div>
                     </CardContent>
                   </Card>

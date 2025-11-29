@@ -3,6 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Loading from "@/components/loading"
 
 export type UserRole = "admin" | "manager" | "maintenance"
 
@@ -97,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         canAccessProperty,
       }}
     >
-      {isLoading ?  <>Loading...</ > : children}
+      {isLoading ?  <><Loading/></ > : children}
     </AuthContext.Provider>
   )
 }

@@ -50,6 +50,7 @@ export default function MaintenanceRequestModal({ onSubmit, trigger }: Maintenan
 
   const {user , company} = useAuth()
 
+  const [id , setId] = useState(null)
   const [open, setOpen] = useState(false)
   const [properties, setProperties] = useState<Property[]>([])
   const [units, setUnits] = useState<Unit[]>([])
@@ -107,8 +108,7 @@ export default function MaintenanceRequestModal({ onSubmit, trigger }: Maintenan
 
   const fetchProperties = async () => {
     setLoadingProperties(true)
-    try {
-      
+    try {      
     let properties = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/maintenance/properties/company/${company.company_id}/user/${user?.user_id}`)
     const data = await properties.json()
       setProperties(data.properties)
@@ -121,37 +121,15 @@ export default function MaintenanceRequestModal({ onSubmit, trigger }: Maintenan
   }
 
   const fetchUnits = async (propertyId: string) => {
+    console.log("the prop id is " , propertyId)
     setLoadingUnits(true)
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch(`/api/properties/${propertyId}/units`)
-      const data = await response.json()
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${id}/units`)
+      const {data} = await response.json()
+
       setUnits(data)
     } catch (error) {
-      console.error("[v0] Error fetching units:", error)
-      // Mock data for development
-      setUnits([
-        {
-          id: "1",
-          unit_number: "2A",
-          unit_type: "apartment",
-          tenant_name: "John Adebayo",
-          tenant_phone: "+234 801 234 5678",
-          tenant_email: "john@example.com",
-        },
-        {
-          id: "2",
-          unit_number: "3B",
-          unit_type: "apartment",
-          tenant_name: "Sarah Okonkwo",
-          tenant_phone: "+234 802 345 6789",
-        },
-        {
-          id: "3",
-          unit_number: "4C",
-          unit_type: "apartment",
-        },
-      ])
+      setUnits([])
     } finally {
       setLoadingUnits(false)
     }
@@ -168,7 +146,6 @@ export default function MaintenanceRequestModal({ onSubmit, trigger }: Maintenan
 
     // If property-level maintenance, remove unit_id
     const submitData = isPropertyLevel ? { ...formData, unit_id: undefined } : formData
-
     onSubmit(submitData)
     handleReset()
     setOpen(false)
@@ -195,6 +172,8 @@ export default function MaintenanceRequestModal({ onSubmit, trigger }: Maintenan
   }
 
   const handleInputChange = (field: keyof MaintenanceRequestFormData, value: any) => {
+    setId(value)
+    setLoadingProperties(value)
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -288,11 +267,11 @@ export default function MaintenanceRequestModal({ onSubmit, trigger }: Maintenan
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {units.map((unit) => (
+                    {units.map((unit, index) => (
                       <SelectItem key={unit.id} value={unit.id}>
                         <div>
                           <p className="font-medium">
-                            Unit {unit.unit_number} - {unit.unit_type}
+                            Unit {unit.unit_number} - {index}
                           </p>
                           {unit.tenant_name && (
                             <p className="text-xs text-muted-foreground">Tenant: {unit.tenant_name}</p>
