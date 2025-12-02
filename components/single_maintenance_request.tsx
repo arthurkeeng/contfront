@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -39,6 +39,12 @@ const SingleMaintenanceRequest = ({
   const [isEditing, setIsEditing] = useState(false)
   const [maintenanceRequest, setMaintenanceRequest] = useState<MaintenanceRequest>(initialRequest)
   const [editedRequest, setEditedRequest] = useState<MaintenanceRequest>(initialRequest)
+
+  useEffect(() => {
+  setMaintenanceRequest(initialRequest)
+  setEditedRequest(initialRequest)
+}, [initialRequest])
+
 
   const priorityColors = {
     low: "bg-blue-100 text-blue-800 border-blue-200",
@@ -268,24 +274,26 @@ const SingleMaintenanceRequest = ({
               <Label className="text-muted-foreground">Name</Label>
               {isEditing ? (
                 <Input
-                  value={editedRequest.tenant}
-                  onChange={(e) => setEditedRequest({ ...editedRequest, tenant: e.target.value })}
+                disabled
+                  value={editedRequest.tenant_name}
+                  onChange={(e) => setEditedRequest({ ...editedRequest, tenant_name: e.target.value })}
                 />
               ) : (
-                <p className="font-medium">{maintenanceRequest.tenant}</p>
+                <p className="font-medium">{maintenanceRequest.tenant_name}</p>
               )}
             </div>
             <div>
               <Label className="text-muted-foreground">Phone</Label>
               {isEditing ? (
                 <Input
-                  value={editedRequest.tenantPhone}
-                  onChange={(e) => setEditedRequest({ ...editedRequest, tenantPhone: e.target.value })}
+                disabled
+                  value={editedRequest.tenant_phone}
+                  onChange={(e) => setEditedRequest({ ...editedRequest, tenant_phone: e.target.value })}
                 />
               ) : (
                 <p className="font-medium flex items-center gap-2">
                   <Phone className="h-4 w-4" />
-                  {maintenanceRequest.tenantPhone}
+                  {maintenanceRequest.tenant_phone}
                 </p>
               )}
             </div>
@@ -303,31 +311,31 @@ const SingleMaintenanceRequest = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {maintenanceRequest.assignedTo ? (
+            {maintenanceRequest.assigned_to ? (
               <>
                 <div>
                   <Label className="text-muted-foreground">Assigned To</Label>
                   {isEditing ? (
                     <Input
-                      value={editedRequest.assignedTo || ""}
-                      onChange={(e) => setEditedRequest({ ...editedRequest, assignedTo: e.target.value })}
+                      value={editedRequest.assigned_to || ""}
+                      onChange={(e) => setEditedRequest({ ...editedRequest, assigned_to: e.target.value })}
                     />
                   ) : (
-                    <p className="font-medium">{maintenanceRequest.assignedTo}</p>
+                    <p className="font-medium">{maintenanceRequest.assigned_to}</p>
                   )}
                 </div>
-                {maintenanceRequest.assignedToPhone && (
+                {maintenanceRequest.assigned_to_phone && (
                   <div>
                     <Label className="text-muted-foreground">Phone</Label>
                     {isEditing ? (
                       <Input
-                        value={editedRequest.assignedToPhone || ""}
-                        onChange={(e) => setEditedRequest({ ...editedRequest, assignedToPhone: e.target.value })}
+                        value={editedRequest.assigned_to_phone || ""}
+                        onChange={(e) => setEditedRequest({ ...editedRequest, assigned_to_phone: e.target.value })}
                       />
                     ) : (
                       <p className="font-medium flex items-center gap-2">
                         <Phone className="h-4 w-4" />
-                        {maintenanceRequest.assignedToPhone}
+                        {maintenanceRequest.assigned_to_phone}
                       </p>
                     )}
                   </div>
@@ -352,18 +360,18 @@ const SingleMaintenanceRequest = ({
           <CardContent className="space-y-3">
             <div>
               <Label className="text-muted-foreground">Created Date</Label>
-              <p className="font-medium">{new Date(maintenanceRequest.createdDate).toLocaleDateString()}</p>
+              <p className="font-medium">{new Date(maintenanceRequest.created_date).toLocaleDateString()}</p>
             </div>
             <div>
               <Label className="text-muted-foreground">Due Date</Label>
               {isEditing ? (
                 <Input
                   type="date"
-                  value={editedRequest.dueDate}
-                  onChange={(e) => setEditedRequest({ ...editedRequest, dueDate: e.target.value })}
+                  value={editedRequest.due_date}
+                  onChange={(e) => setEditedRequest({ ...editedRequest, due_date: e.target.value })}
                 />
               ) : (
-                <p className="font-medium">{new Date(maintenanceRequest.dueDate).toLocaleDateString()}</p>
+                <p className="font-medium">{new Date(maintenanceRequest.due_date).toLocaleDateString()}</p>
               )}
             </div>
           </CardContent>
@@ -385,11 +393,11 @@ const SingleMaintenanceRequest = ({
               {isEditing ? (
                 <Input
                   type="number"
-                  value={editedRequest.estimatedCost}
-                  onChange={(e) => setEditedRequest({ ...editedRequest, estimatedCost: Number(e.target.value) })}
+                  value={editedRequest.estimated_cost}
+                  onChange={(e) => setEditedRequest({ ...editedRequest, estimated_cost: Number(e.target.value) })}
                 />
               ) : (
-                <p className="text-2xl font-bold">₦{maintenanceRequest.estimatedCost.toLocaleString()}</p>
+                <p className="text-2xl font-bold">₦{maintenanceRequest.estimated_cost}</p>
               )}
             </div>
             <div>
@@ -397,13 +405,13 @@ const SingleMaintenanceRequest = ({
               {isEditing ? (
                 <Input
                   type="number"
-                  value={editedRequest.actualCost}
-                  onChange={(e) => setEditedRequest({ ...editedRequest, actualCost: Number(e.target.value) })}
+                  value={editedRequest.actual_cost}
+                  onChange={(e) => setEditedRequest({ ...editedRequest, actual_cost: Number(e.target.value) })}
                 />
               ) : (
                 <p className="text-2xl font-bold">
-                  {maintenanceRequest.actualCost > 0
-                    ? `₦${maintenanceRequest.actualCost.toLocaleString()}`
+                  {maintenanceRequest.actual_cost > 0
+                    ? `₦${maintenanceRequest.actual_cost.toLocaleString()}`
                     : "Not yet determined"}
                 </p>
               )}

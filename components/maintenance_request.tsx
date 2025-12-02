@@ -146,6 +146,7 @@ export default function MaintenanceRequestModal({ onSubmit, trigger }: Maintenan
 
     // If property-level maintenance, remove unit_id
     const submitData = isPropertyLevel ? { ...formData, unit_id: undefined } : formData
+    console.log("data " , submitData)
     onSubmit(submitData)
     handleReset()
     setOpen(false)

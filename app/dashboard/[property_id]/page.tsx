@@ -253,9 +253,8 @@ export default function PropertyPage({ propertyId }: { propertyId: string }) {
 
     if (req.ok) {
       let response = await req.json()
-      router.push('/dashboard')
-
       toast.success(response.message)
+      window.location.reload()
     }
     else {
       toast.error("Failed to Update Unit")

@@ -1,26 +1,49 @@
 "use client"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Wrench, Clock, CheckCircle, AlertCircle } from "lucide-react"
 import MaintenanceRequestModal from "@/components/maintenance_request"
+import { useAuth } from "@/lib/auth"
+import { toast } from "sonner"
 
 export default function MaintenancePage() {
   const [requests, setRequests] = useState<any[]>([])
+  const {user , company} = useAuth()
 
-  const handleSubmit = (data: any) => {
-    // TODO: Submit to API
-    setRequests((prev) => [
-      ...prev,
-      {
-        ...data,
-        id: `MT-${Date.now()}`,
-        status: "pending",
-        created_date: new Date().toISOString().split("T")[0],
-      },
-    ])
+  useEffect(()=>{
+    fetchRequests()
+  }, [])
+
+  const fetchRequests = async () =>{
+      try {
+        
+        const reqs = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/maintenace/requests/${user?.user_id}/company/${company.company_id}`)
+        const {data :res} = await reqs.json()
+        setRequests(res)
+      } catch (error) {
+        setRequests([])
+      }
+      } 
+
+  const handleSubmit = async (data: any) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/maintenace/create_new`, {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({
+        company_id : company.company_id,
+         user_id :user?.user_id,
+         ...data}),
+     })
+      toast.success("Maintenance Request Created")
+      // router.refresh()
+      window.location.reload()
+    } catch (error) {
+      toast.error("Failed to Create Request")
+    }
   }
 
   return (
@@ -126,7 +149,7 @@ export default function MaintenancePage() {
                         {request.tenant_name && <span>Tenant: {request.tenant_name}</span>}
                       </div>
                     </div>
-                    <Link href={`/dashboard/maintenance/${45}`}>
+                    <Link href={`/dashboard/maintenance/${request.id}`}>
                     
                     <Button variant="outline" size="sm">
                       View Details

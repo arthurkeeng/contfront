@@ -36,17 +36,17 @@ interface MaintenanceRequest {
   property: string
   propertyAddress: string
   unit?: string
-  tenant: string
-  tenantPhone: string
+  tenant_name: string
+  tenant_phone: string
   priority: "low" | "medium" | "high" | "urgent"
   status: "pending" | "in_progress" | "completed" | "cancelled"
   category: string
-  assignedTo?: string
-  assignedToPhone?: string
-  createdDate: string
-  dueDate: string
-  estimatedCost: number
-  actualCost: number
+  assigned_to?: string
+  assigned_to_phone?: string
+  created_date: string
+  due_date: string
+  estimated_cost: number
+  actual_cost: number
   comments: number
 }
 
